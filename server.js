@@ -36,7 +36,6 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const app = express();
-app.set('trust proxy', 1);
 app.use(express.json({ limit: '8mb' })); // generous enough for base64-encoded photos (profile pics, menu item images)
 app.use((err, req, res, next) => {
   if (err && err.type === 'entity.too.large') {
@@ -344,10 +343,22 @@ app.use('/api/event-invoices', crudRouter('event_invoices', [
 ], 'id DESC', 'eventinvoicing'));
 
 app.use('/api/stall-vendors', crudRouter('stall_vendors', [
-  F.string('festivalName', 'festival_name'), F.string('eventDate', 'event_date'), F.string('location', 'location'),
+  F.string('festivalName', 'festival_name'), F.dateOrNull('eventDate', 'event_date'), F.dateOrNull('endDate', 'end_date'), F.string('location', 'location'),
   F.string('vendorName', 'vendor_name'), F.string('vendorContact', 'vendor_contact'), F.string('stallNumber', 'stall_number'),
   F.number('stallFee', 'stall_fee'), F.string('paymentStatus', 'payment_status'), F.string('notes', 'notes'),
 ], 'id DESC', 'stallvendor'));
+
+app.use('/api/stall-packages', crudRouter('stall_packages', [
+  F.string('name', 'name'), F.string('itemName', 'item_name'), F.string('description', 'description'),
+  F.number('basePrice', 'base_price'), F.number('prepCost', 'prep_cost'), F.string('priceUnit', 'price_unit'),
+  F.string('dietaryTags', 'dietary_tags'), F.string('notes', 'notes'),
+], 'id DESC', 'stallvendor'));
+
+app.use('/api/stall-package-selections', crudRouter('stall_package_selections', [
+  F.number('stallVendorId', 'stall_vendor_id'), F.number('packageId', 'package_id'), F.string('tagDate', 'tag_date'),
+  F.number('quantity', 'quantity'), F.number('discountPct', 'discount_pct'), F.number('discountAmount', 'discount_amount'),
+  F.string('notes', 'notes'),
+], 'id DESC', 'stallvendor', undefined, 'This item is already assigned to this stall on that date — edit its quantity instead, or pick a different date.'));
 
 app.use('/api/menu-categories', crudRouter('menu_categories', [
   F.string('name', 'name'), F.numberOrNull('parentId', 'parent_id'), F.number('sortOrder', 'sort_order'),

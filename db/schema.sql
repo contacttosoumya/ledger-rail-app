@@ -156,6 +156,8 @@ CREATE TABLE IF NOT EXISTS stall_vendors (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Multi-day festivals: NULL means single-day, matching the events.end_date pattern.
+ALTER TABLE stall_vendors ADD COLUMN IF NOT EXISTS end_date DATE;
 
 -- Inventory & Prep Planning: shopping/prep list items tied to a specific booking.
 CREATE TABLE IF NOT EXISTS event_prep_items (
@@ -710,3 +712,38 @@ CREATE TABLE IF NOT EXISTS catering_packages (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ===========================================================================
+-- STALL VENDOR — full parallel system, same shape as the Events food module:
+-- Menu Catalog (with prep cost), Stall Food Tagging (with per-day tagging for
+-- multi-day festivals), Prep Cost Analysis, and Revenue Reports / Stall
+-- Summaries computed from the same kind of tagged-item data as Events.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS stall_packages (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,             -- Item Category
+  item_name TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  base_price NUMERIC(12,2) NOT NULL DEFAULT 0,
+  price_unit TEXT DEFAULT 'Full Tray',
+  dietary_tags TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  prep_cost NUMERIC(12,2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS stall_package_selections (
+  id BIGSERIAL PRIMARY KEY,
+  stall_vendor_id BIGINT NOT NULL REFERENCES stall_vendors(id) ON DELETE CASCADE,
+  package_id BIGINT NOT NULL REFERENCES stall_packages(id) ON DELETE CASCADE,
+  tag_date DATE NOT NULL,
+  quantity NUMERIC(12,2) NOT NULL DEFAULT 1,
+  discount_pct NUMERIC(6,2) NOT NULL DEFAULT 0,
+  discount_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(stall_vendor_id, package_id, tag_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_stall_package_selections_vendor ON stall_package_selections(stall_vendor_id);
+CREATE INDEX IF NOT EXISTS idx_stall_package_selections_package ON stall_package_selections(package_id);

@@ -908,10 +908,17 @@
           <button class="nav-subitem" data-tab="eventinvoicing">Invoicing &amp; Billing</button>
         </div></div>
       </div>
-      <button class="nav-item" data-tab="stallvendor" data-label="Stall Vendor">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 7l1.3-4h11.4L17 7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 7h14v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5v2.2M13 10.5v2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span>Stall Vendor</span>
-      </button>
+      <div class="nav-group">
+        <button class="nav-item nav-parent" data-tab="stallvendor" data-label="Stall Bookings">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M3 7l1.3-4h11.4L17 7" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M3 7h14v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5v2.2M13 10.5v2.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Stall Vendor</span>
+          <svg class="nav-chevron" viewBox="0 0 20 20" fill="none"><path d="M7 5l5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="nav-submenu" id="submenu-stallvendor"><div class="nav-submenu-inner">
+          <button class="nav-subitem active" data-tab="stallvendor">Stall Bookings</button>
+          <button class="nav-subitem" data-tab="stallcatalog">Menu Catalog</button>
+        </div></div>
+      </div>
       <button class="nav-item" data-tab="costing" data-label="Costing">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="4" y="2.5" width="12" height="15" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 5.5h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="9" r=".9" fill="currentColor"/><circle cx="10" cy="9" r=".9" fill="currentColor"/><circle cx="13" cy="9" r=".9" fill="currentColor"/><circle cx="7" cy="12" r=".9" fill="currentColor"/><circle cx="10" cy="12" r=".9" fill="currentColor"/><circle cx="13" cy="12" r=".9" fill="currentColor"/><circle cx="7" cy="15" r=".9" fill="currentColor"/><rect x="9.3" y="14.1" width="4.4" height="1.8" rx=".6" fill="currentColor"/></svg>
         <span>Costing</span>
@@ -1439,14 +1446,15 @@
 
   <!-- STALL VENDOR -->
   <section class="panel" id="panel-stallvendor">
-    <h2 class="section-title">Stall Vendor</h2>
+    <h2 class="section-title">Stall Bookings</h2>
     <p class="section-sub">Track stalls given out to vendors at festivals, gatherings, and events — who's in, what they owe, and where</p>
 
     <div class="kpi-row" id="stallvendor-kpis"></div>
 
     <form class="entry-form" id="form-stallvendor">
       <div class="field"><label>Festival / Event Name</label><input type="text" name="festivalName" placeholder="e.g. Diwali Mela" required></div>
-      <div class="field"><label>Date</label><input type="date" name="eventDate"></div>
+      <div class="field"><label>Start Date</label><input type="date" name="eventDate"></div>
+      <div class="field"><label>End Date</label><input type="date" name="endDate" placeholder="same day if blank"></div>
       <div class="field"><label>Location</label><input type="text" name="location" placeholder="e.g. City Fairgrounds"></div>
       <div class="field"><label>Vendor Name</label><input type="text" name="vendorName" placeholder="e.g. Priya's Chaat Corner" required></div>
       <div class="field"><label>Vendor Contact</label><input type="text" name="vendorContact" placeholder="phone or email"></div>
@@ -1456,10 +1464,44 @@
       <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
       <button type="submit" class="btn">Add Stall Vendor</button>
     </form>
+    <p class="helper-note" style="margin-top:-8px; margin-bottom:16px;">Leave End Date blank for a single-day festival. Set it to mark a booking as spanning multiple days — food tagging can then be assigned to specific days within that range.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Festival / Event</th><th>Date</th><th>Location</th><th>Vendor</th><th>Contact</th><th>Stall #</th><th class="num">Stall Fee</th><th>Payment Status</th><th>Notes</th><th></th></tr></thead>
+        <thead><tr><th>Festival / Event</th><th>Date(s)</th><th>Location</th><th>Vendor</th><th>Contact</th><th>Stall #</th><th class="num">Stall Fee</th><th>Payment Status</th><th>Notes</th><th></th></tr></thead>
         <tbody id="table-stallvendors"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STALL VENDOR MENU CATALOG -->
+  <section class="panel" id="panel-stallcatalog">
+    <h2 class="section-title">Menu Catalog</h2>
+    <p class="section-sub">Fixed menu bundles you can quote a stall booking against</p>
+    <form class="entry-form" id="form-stallpackage">
+      <div class="field">
+        <label>Item Category</label>
+        <select id="stallpackage-category-select" required>
+          <option value="">— Select —</option>
+          <option value="__new__">+ Add New Category</option>
+        </select>
+        <input type="text" name="name" id="stallpackage-category-new" placeholder="New category name" style="display:none; margin-top:6px;">
+      </div>
+      <div class="field"><label>Item Name</label><input type="text" name="itemName" placeholder="e.g. Butter Chicken" required></div>
+      <div class="field"><label>Base Price</label><input type="number" step="0.01" name="basePrice" placeholder="0.00" required></div>
+      <div class="field"><label>Price Unit</label><select name="priceUnit" id="stallpriceunit-select"></select></div>
+      <div class="field wide"><label>Description</label><input type="text" name="description" placeholder="what's included"></div>
+      <div class="field wide"><label>Dietary &amp; Allergen Tags</label><input type="text" name="dietaryTags" placeholder="e.g. Vegan option, Gluten-free option, Contains nuts"></div>
+      <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
+      <button type="submit" class="btn">Add Item</button>
+    </form>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="field"><label>Filter by Category</label><select id="stallcatalog-category-filter"><option value="">— All Categories —</option></select></div>
+      <div class="field"><label>Search</label><input type="text" id="stallcatalog-search" placeholder="Search by item or category…"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Item Category</th><th>Item Name</th><th>Description</th><th class="num">Price</th><th>Unit</th><th>Dietary / Allergen Tags</th><th></th></tr></thead>
+        <tbody id="table-stallpackages"></tbody>
       </table>
     </div>
   </section>
@@ -1943,9 +1985,34 @@ function eventDateLabel(evt){
   return isMultiDay(evt) ? `${evt.date} – ${evt.endDate}` : evt.date;
 }
 
+// ---------- STALL VENDOR: same multi-day date-range pattern as Events, but
+// for stall_vendors' field names (eventDate instead of date) ----------
+function isStallMultiDay(v){
+  return !!(v && v.endDate && v.endDate !== v.eventDate);
+}
+function stallDateRange(v){
+  if(!v || !v.eventDate) return [];
+  if(!isStallMultiDay(v)) return [v.eventDate];
+  const dates = [];
+  let cur = new Date(v.eventDate + 'T00:00:00');
+  const end = new Date(v.endDate + 'T00:00:00');
+  let guard = 0;
+  while(cur <= end && guard < 60){
+    dates.push(cur.toISOString().slice(0,10));
+    cur.setDate(cur.getDate()+1);
+    guard++;
+  }
+  return dates.length ? dates : [v.eventDate];
+}
+function stallDateLabel(v){
+  if(!v) return '';
+  if(!v.eventDate) return '—';
+  return isStallMultiDay(v) ? `${v.eventDate} – ${v.endDate}` : v.eventDate;
+}
+
 document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
 
-let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [] };
+let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [] };
 let chartInstance = null;
 let partnerChartInstance = null;
 
@@ -1978,6 +2045,8 @@ const ENDPOINTS = {
   menuComboSteps: '/api/menu-combo-steps',
   menuComboStepItems: '/api/menu-combo-step-items',
   cateringPackages: '/api/catering-packages',
+  stallPackages: '/api/stall-packages',
+  stallPackageSelections: '/api/stall-package-selections',
 };
 
 async function apiGet(key){
@@ -2045,6 +2114,7 @@ async function loadAll(){
   populateStaticDropdown('booking_status', 'bookingstatus-select', 'Status');
   populateStaticDropdown('price_unit', 'priceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
+  populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'stallvendor-paymentstatus-select', 'Status');
@@ -2075,6 +2145,7 @@ function renderAll(){
     refreshSetupCostPaidBySelect, renderSetupCosts,
     renderEventPackages, renderEventPrep, renderEventInvoices, renderEventPackageSelections,
     renderStallVendors,
+    renderStallPackages,
     renderMenuItems,
     renderMenuCategoryTree,
     renderMenuCombos,
@@ -3021,6 +3092,75 @@ function renderCateringPackages(){
     <td>${p.dietaryTags||'—'}</td>
     <td><button class="del-btn" data-seg="cateringPackages" data-id="${p.id}">✕</button></td></tr>`).join('')
     : (state.cateringPackages.length
+        ? `<tr class="empty-row"><td colspan="7">No items match this filter.</td></tr>`
+        : `<tr class="empty-row"><td colspan="7">No items yet — add a menu item above (e.g. category "Mains", item "Butter Chicken").</td></tr>`);
+}
+
+// ---------- STALL VENDOR MENU CATALOG (independent from Events'/Catering's) ----------
+function refreshStallCatalogCategorySelects(){
+  const categories = Array.from(new Set(state.stallPackages.map(p=>p.name))).sort();
+
+  const formSelect = document.getElementById('stallpackage-category-select');
+  if(formSelect){
+    const current = formSelect.value;
+    formSelect.innerHTML = `<option value="">— Select —</option>`
+      + categories.map(c=>`<option value="${esc(c)}">${c}</option>`).join('')
+      + `<option value="__new__">+ Add New Category</option>`;
+    if(current && (categories.includes(current) || current === '__new__')) formSelect.value = current;
+  }
+
+  const filterSelect = document.getElementById('stallcatalog-category-filter');
+  if(filterSelect){
+    const current = filterSelect.value;
+    filterSelect.innerHTML = `<option value="">— All Categories —</option>` + categories.map(c=>`<option value="${esc(c)}">${c}</option>`).join('');
+    if(current && categories.includes(current)) filterSelect.value = current;
+  }
+}
+
+document.getElementById('stallpackage-category-select').addEventListener('change', e=>{
+  const newInput = document.getElementById('stallpackage-category-new');
+  const isNew = e.target.value === '__new__';
+  newInput.style.display = isNew ? 'block' : 'none';
+  newInput.required = isNew;
+  if(isNew) newInput.focus();
+});
+
+document.getElementById('form-stallpackage').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const catSelect = document.getElementById('stallpackage-category-select');
+  const catNewInput = document.getElementById('stallpackage-category-new');
+  const category = catSelect.value === '__new__' ? catNewInput.value.trim() : catSelect.value;
+  if(!category){ alert('Pick an Item Category, or choose "+ Add New Category" and name one.'); return; }
+  const f = new FormData(e.target);
+  const payload = { name: category, itemName: f.get('itemName')||'', description: f.get('description')||'',
+    basePrice:+f.get('basePrice')||0, priceUnit: f.get('priceUnit')||'Full Tray', dietaryTags: f.get('dietaryTags')||'',
+    notes: f.get('notes')||'' };
+  try{
+    const row = await apiCreate('stallPackages', payload);
+    state.stallPackages.unshift(row);
+    renderStallPackages(); e.target.reset();
+    document.getElementById('stallpackage-category-new').style.display = 'none';
+  }catch(err){ alert(err.message); }
+});
+
+document.getElementById('stallcatalog-category-filter').addEventListener('change', renderStallPackages);
+document.getElementById('stallcatalog-search').addEventListener('input', renderStallPackages);
+
+function renderStallPackages(){
+  refreshStallCatalogCategorySelects();
+  const tbody = document.getElementById('table-stallpackages');
+  if(!tbody) return;
+  const catFilter = document.getElementById('stallcatalog-category-filter')?.value || '';
+  const search = (document.getElementById('stallcatalog-search')?.value || '').toLowerCase().trim();
+  const filtered = state.stallPackages.filter(p =>
+    (!catFilter || p.name === catFilter) &&
+    (!search || (p.itemName||'').toLowerCase().includes(search) || p.name.toLowerCase().includes(search))
+  );
+  tbody.innerHTML = filtered.length ? filtered.map(p=>`
+    <tr><td>${p.name}</td><td>${p.itemName||'—'}</td><td>${p.description||'—'}</td><td class="num">${fmt(p.basePrice)}</td><td>${p.priceUnit}</td>
+    <td>${p.dietaryTags||'—'}</td>
+    <td><button class="del-btn" data-seg="stallPackages" data-id="${p.id}">✕</button></td></tr>`).join('')
+    : (state.stallPackages.length
         ? `<tr class="empty-row"><td colspan="7">No items match this filter.</td></tr>`
         : `<tr class="empty-row"><td colspan="7">No items yet — add a menu item above (e.g. category "Mains", item "Butter Chicken").</td></tr>`);
 }
@@ -4196,7 +4336,7 @@ function renderStallVendors(){
     const tag = PAYMENT_STATUS_TAG[v.paymentStatus] || 'tag-events';
     return `<tr>
       <td>${esc(v.festivalName)}</td>
-      <td>${v.eventDate||''}</td>
+      <td>${stallDateLabel(v)}</td>
       <td>${esc(v.location)}</td>
       <td>${esc(v.vendorName)}</td>
       <td>${esc(v.vendorContact)}</td>
@@ -4213,7 +4353,7 @@ document.getElementById('form-stallvendor').addEventListener('submit', async e=>
   e.preventDefault();
   const f = new FormData(e.target);
   const payload = {
-    festivalName: f.get('festivalName'), eventDate: f.get('eventDate') || null, location: f.get('location')||'',
+    festivalName: f.get('festivalName'), eventDate: f.get('eventDate') || '', endDate: f.get('endDate') || '', location: f.get('location')||'',
     vendorName: f.get('vendorName'), vendorContact: f.get('vendorContact')||'', stallNumber: f.get('stallNumber')||'',
     stallFee: +f.get('stallFee') || 0, paymentStatus: f.get('paymentStatus'), notes: f.get('notes')||'',
   };
@@ -4268,6 +4408,7 @@ function refreshAllStaticDropdowns(){
   populateStaticDropdown('booking_status', 'bookingstatus-select', 'Status');
   populateStaticDropdown('price_unit', 'priceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
+  populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('station_tag', 'menuitem-station-select', 'Station');
@@ -5051,7 +5192,7 @@ const NAV_RESOURCE_MAP = {
   menucategories:'menucatalog', menucombos:'menucatalog',
   eventbookings:'eventbookings', eventsummary:'eventsummary', eventcatalog:'eventcatalog',
   eventtagging:'eventcatalog', foodprepcosting:'eventcatalog', eventrevenue:'eventcatalog',
-  eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor',
+  eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor',
   contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai',
   activity:'activity',
   'admin-categories':'admin', 'admin-dropdowns':'admin', 'admin-eventcatalog':'admin',
