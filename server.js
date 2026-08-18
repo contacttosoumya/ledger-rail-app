@@ -36,6 +36,7 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '8mb' })); // generous enough for base64-encoded photos (profile pics, menu item images)
 app.use((err, req, res, next) => {
   if (err && err.type === 'entity.too.large') {
