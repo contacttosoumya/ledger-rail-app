@@ -1708,16 +1708,22 @@
     <h2 class="section-title">Monthly Expenses</h2>
     <p class="section-sub">Rent, electricity, water, insurance, and every other recurring bill — tracked month by month</p>
 
+    <h3 class="subhead" id="monthlyexpense-form-heading" style="margin-top:0;">Add an Expense</h3>
     <form class="entry-form" id="form-monthlyexpense">
       <div class="field"><label>Category</label><select name="category" id="monthlyexpense-category-select"></select></div>
       <div class="field"><label>Vendor / Payee</label><input type="text" name="vendor" placeholder="e.g. Duke Energy"></div>
       <div class="field"><label>Amount</label><input type="number" step="0.01" name="amount" placeholder="0.00" required></div>
       <div class="field"><label>Month</label><input type="month" name="expenseMonth" id="monthlyexpense-month-input" required></div>
       <div class="field"><label>Payment Status</label><select name="paymentStatus" id="monthlyexpense-paymentstatus-select"></select></div>
-      <div class="field"><label>Bill / Receipt (optional)</label><input type="file" id="monthlyexpense-file-input"></div>
+      <div class="field"><label id="monthlyexpense-file-label">Bill / Receipt (optional)</label><input type="file" id="monthlyexpense-file-input"></div>
       <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
-      <button type="submit" class="btn">Add Expense</button>
+      <button type="submit" class="btn" id="monthlyexpense-submit-btn">Add Expense</button>
+      <button type="button" class="btn ghost" id="monthlyexpense-cancel-btn" style="display:none;">Cancel</button>
     </form>
+    <div id="monthlyexpense-current-file-wrap" style="display:none; margin-top:-10px; margin-bottom:12px;">
+      <span class="helper-note" style="margin:0;">Currently attached: <span id="monthlyexpense-current-file-name"></span> — choose a new file above to replace it.</span>
+      <button type="button" id="monthlyexpense-remove-current-file" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove Document</button>
+    </div>
     <div id="monthlyexpense-file-preview-wrap" style="display:none; margin-top:-10px; margin-bottom:16px;">
       <span class="helper-note" style="margin:0;">Attached: <span id="monthlyexpense-file-preview-name"></span></span>
       <button type="button" id="monthlyexpense-file-clear" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove</button>
@@ -2962,6 +2968,8 @@ document.getElementById('monthlyexpense-view-month').value = dateToMonthInput(to
 
 let monthlyExpenseFileData = '';
 let monthlyExpenseFileMeta = null;
+let editingMonthlyExpenseId = null;
+let monthlyExpenseRemoveExistingFile = false;
 
 document.getElementById('monthlyexpense-file-input').addEventListener('change', e=>{
   const file = e.target.files[0];
@@ -2980,6 +2988,9 @@ document.getElementById('monthlyexpense-file-input').addEventListener('change', 
     monthlyExpenseFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
     document.getElementById('monthlyexpense-file-preview-name').textContent = file.name;
     document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'block';
+    // Picking a new file supersedes an earlier "remove" click and hides that banner.
+    monthlyExpenseRemoveExistingFile = false;
+    document.getElementById('monthlyexpense-current-file-wrap').style.display = 'none';
   };
   reader.readAsDataURL(file);
 });
@@ -2988,6 +2999,10 @@ document.getElementById('monthlyexpense-file-clear').addEventListener('click', (
   monthlyExpenseFileMeta = null;
   document.getElementById('monthlyexpense-file-input').value = '';
   document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+});
+document.getElementById('monthlyexpense-remove-current-file').addEventListener('click', ()=>{
+  monthlyExpenseRemoveExistingFile = true;
+  document.getElementById('monthlyexpense-current-file-wrap').style.display = 'none';
 });
 
 function viewMonthlyExpenseDoc(id){
@@ -2999,30 +3014,93 @@ function viewMonthlyExpenseDoc(id){
   setTimeout(()=>URL.revokeObjectURL(url), 60_000);
 }
 
+function resetMonthlyExpenseForm(){
+  editingMonthlyExpenseId = null;
+  monthlyExpenseRemoveExistingFile = false;
+  monthlyExpenseFileData = '';
+  monthlyExpenseFileMeta = null;
+  document.getElementById('form-monthlyexpense').reset();
+  document.getElementById('monthlyexpense-month-input').value = dateToMonthInput(todayStr());
+  document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+  document.getElementById('monthlyexpense-current-file-wrap').style.display = 'none';
+  document.getElementById('monthlyexpense-form-heading').textContent = 'Add an Expense';
+  document.getElementById('monthlyexpense-submit-btn').textContent = 'Add Expense';
+  document.getElementById('monthlyexpense-cancel-btn').style.display = 'none';
+}
+
+function startEditMonthlyExpense(id){
+  const x = state.monthlyExpenses.find(m=>String(m.id)===String(id));
+  if(!x) return;
+  editingMonthlyExpenseId = id;
+  monthlyExpenseRemoveExistingFile = false;
+  monthlyExpenseFileData = '';
+  monthlyExpenseFileMeta = null;
+
+  const form = document.getElementById('form-monthlyexpense');
+  form.querySelector('[name=category]').value = x.category;
+  form.querySelector('[name=vendor]').value = x.vendor || '';
+  form.querySelector('[name=amount]').value = x.amount;
+  form.querySelector('[name=expenseMonth]').value = dateToMonthInput(x.expenseMonth);
+  form.querySelector('[name=paymentStatus]').value = x.paymentStatus;
+  form.querySelector('[name=notes]').value = x.notes || '';
+  document.getElementById('monthlyexpense-file-input').value = '';
+  document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+
+  const currentFileWrap = document.getElementById('monthlyexpense-current-file-wrap');
+  if(x.fileData){
+    document.getElementById('monthlyexpense-current-file-name').textContent = x.fileName || 'attached file';
+    currentFileWrap.style.display = 'block';
+  } else {
+    currentFileWrap.style.display = 'none';
+  }
+
+  document.getElementById('monthlyexpense-form-heading').textContent = `Editing: ${x.category}${x.vendor ? ' — '+x.vendor : ''} (${formatMonthLabel(dateToMonthInput(x.expenseMonth))})`;
+  document.getElementById('monthlyexpense-submit-btn').textContent = 'Update Expense';
+  document.getElementById('monthlyexpense-cancel-btn').style.display = 'inline-block';
+  document.getElementById('panel-monthlyexpenses').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+document.getElementById('monthlyexpense-cancel-btn').addEventListener('click', resetMonthlyExpenseForm);
+
 document.getElementById('form-monthlyexpense').addEventListener('submit', async e=>{
   e.preventDefault();
   const f = new FormData(e.target);
   const monthVal = f.get('expenseMonth');
   if(!monthVal){ alert('Pick a month.'); return; }
+
+  // File data: a newly-picked file always wins; otherwise, if editing and the
+  // user explicitly clicked "Remove Document", clear it; otherwise, if
+  // editing, keep whatever was already attached; otherwise (creating), blank.
+  let fileFields;
+  if(monthlyExpenseFileMeta){
+    fileFields = { fileName: monthlyExpenseFileMeta.name, fileType: monthlyExpenseFileMeta.type, fileSize: monthlyExpenseFileMeta.size, fileData: monthlyExpenseFileData };
+  } else if(editingMonthlyExpenseId && monthlyExpenseRemoveExistingFile){
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  } else if(editingMonthlyExpenseId){
+    const original = state.monthlyExpenses.find(x=>String(x.id)===String(editingMonthlyExpenseId));
+    fileFields = { fileName: original?.fileName||'', fileType: original?.fileType||'', fileSize: original?.fileSize||0, fileData: original?.fileData||'' };
+  } else {
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  }
+
   const payload = {
     category: f.get('category')||'', vendor: f.get('vendor')||'', amount:+f.get('amount')||0,
     expenseMonth: monthInputToDate(monthVal), paymentStatus: f.get('paymentStatus')||'Unpaid', notes: f.get('notes')||'',
-    fileName: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.name : '',
-    fileType: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.type : '',
-    fileSize: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.size : 0,
-    fileData: monthlyExpenseFileData || '',
+    ...fileFields,
   };
+
   try{
-    const row = await apiCreate('monthlyExpenses', payload);
-    state.monthlyExpenses.unshift(row);
-    // Jump the "viewing" month to match what was just added, so it's immediately visible.
+    if(editingMonthlyExpenseId){
+      const updated = await apiUpdate('monthlyExpenses', editingMonthlyExpenseId, payload);
+      const idx = state.monthlyExpenses.findIndex(x=>String(x.id)===String(editingMonthlyExpenseId));
+      if(idx>-1) state.monthlyExpenses[idx] = updated;
+    } else {
+      const row = await apiCreate('monthlyExpenses', payload);
+      state.monthlyExpenses.unshift(row);
+    }
     document.getElementById('monthlyexpense-view-month').value = monthVal;
+    resetMonthlyExpenseForm();
     renderMonthlyExpenses();
-    e.target.reset();
-    document.getElementById('monthlyexpense-month-input').value = monthVal;
-    monthlyExpenseFileData = '';
-    monthlyExpenseFileMeta = null;
-    document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
   }catch(err){ alert(err.message); }
 });
 
@@ -3092,7 +3170,10 @@ function renderMonthlyExpenseCurrent(){
       <td><span class="segment-tag ${tag}">${x.paymentStatus}</span></td>
       <td>${x.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewMonthlyExpenseDoc('${x.id}')">View</button>` : '—'}</td>
       <td>${esc(x.notes)}</td>
-      <td><button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button></td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="startEditMonthlyExpense('${x.id}')">Edit</button>
+        <button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button>
+      </td>
     </tr>`;
   }).join('') : `<tr class="empty-row"><td colspan="7">No expenses logged for ${formatMonthLabel(viewMonth)||'this month'} yet — add one above${state.monthlyExpenses.length ? ', or copy from last month' : ''}.</td></tr>`;
 }
@@ -3129,7 +3210,10 @@ function renderMonthlyExpenseHistory(){
                   <td><span class="segment-tag ${tag}">${x.paymentStatus}</span></td>
                   <td>${x.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewMonthlyExpenseDoc('${x.id}')">View</button>` : '—'}</td>
                   <td>${esc(x.notes)}</td>
-                  <td><button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button></td>
+                  <td style="white-space:nowrap;">
+                    <button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="startEditMonthlyExpense('${x.id}')">Edit</button>
+                    <button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button>
+                  </td>
                 </tr>`;
               }).join('')}
             </tbody>
