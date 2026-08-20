@@ -4998,7 +4998,7 @@ function renderStallVendors(){
   tbody.innerHTML = filtered.length ? filtered.map(v=>{
     const tag = PAYMENT_STATUS_TAG[v.paymentStatus] || 'tag-events';
     return `<tr>
-      <td>${esc(v.festivalName)}</td>
+      <td>${esc(v.festivalName)}${v.eventDate ? ` <span style="color:var(--ink-faint); font-family:var(--font-mono); font-size:12px;">— ${stallDateLabel(v)}</span>` : ''}</td>
       <td>${stallDateLabel(v)}</td>
       <td>${esc(v.location)}</td>
       <td>${esc(v.vendorName)}</td>
@@ -5010,6 +5010,20 @@ function renderStallVendors(){
       <td><button class="del-btn" data-seg="stallVendors" data-id="${v.id}">✕</button></td>
     </tr>`;
   }).join('') : `<tr class="empty-row"><td colspan="10">${state.stallVendors.length ? 'No bookings match these filters.' : 'No stall vendors yet — add one above.'}</td></tr>`;
+}
+
+// Splits a total fee evenly across N days without losing or gaining a cent —
+// works in integer cents, and any leftover cent from rounding goes to the
+// first few days rather than being dropped or duplicated.
+function splitFeeEvenly(totalFee, numDays){
+  const totalCents = Math.round(totalFee * 100);
+  const baseCents = Math.floor(totalCents / numDays);
+  const remainder = totalCents - (baseCents * numDays);
+  const fees = [];
+  for(let i=0;i<numDays;i++){
+    fees.push((baseCents + (i < remainder ? 1 : 0)) / 100);
+  }
+  return fees;
 }
 
 document.getElementById('form-stallvendor').addEventListener('submit', async e=>{
@@ -5034,15 +5048,21 @@ document.getElementById('form-stallvendor').addEventListener('submit', async e=>
   // payment status, its own tagged menu items) instead of sharing one row.
   const days = startDate ? stallDateRange({ eventDate: startDate, endDate: endDateVal }) : [''];
 
+  // The fee entered is the TOTAL for the whole booking, not a per-day amount —
+  // split it across the created days so the sum still equals what was typed,
+  // instead of charging the full fee again on every single day.
+  const perDayFees = splitFeeEvenly(baseFields.stallFee, days.length);
+
   const btn = e.target.querySelector('button[type=submit]');
   const originalLabel = btn.textContent;
   btn.disabled = true;
   btn.textContent = days.length > 1 ? `Creating ${days.length} bookings…` : 'Adding…';
 
   let succeeded = 0, failed = 0;
-  for(const day of days){
+  for(let i=0;i<days.length;i++){
+    const day = days[i];
     try{
-      const row = await apiCreate('stallVendors', { ...baseFields, eventDate: day, endDate: '' });
+      const row = await apiCreate('stallVendors', { ...baseFields, stallFee: perDayFees[i], eventDate: day, endDate: '' });
       state.stallVendors.unshift(row);
       succeeded++;
     }catch(err){ failed++; console.warn('Failed to create stall booking for', day || '(no date)', '-', err.message); }
@@ -5054,7 +5074,7 @@ document.getElementById('form-stallvendor').addEventListener('submit', async e=>
   if(failed){
     alert(`Created ${succeeded} of ${days.length} bookings. ${failed} failed.`);
   } else if(days.length > 1){
-    alert(`Created ${succeeded} separate bookings, one for each day from ${days[0]} to ${days[days.length-1]}.`);
+    alert(`Created ${succeeded} separate bookings for ${days[0]} through ${days[days.length-1]}, splitting the ${fmt(baseFields.stallFee)} fee evenly across each day (${fmt(perDayFees[0])}/day).`);
   }
   if(succeeded) e.target.reset();
 });
