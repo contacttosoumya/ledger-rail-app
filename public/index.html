@@ -5068,6 +5068,7 @@ document.getElementById('form-stallvendor').addEventListener('submit', async e=>
     }catch(err){ failed++; console.warn('Failed to create stall booking for', day || '(no date)', '-', err.message); }
   }
   renderStallVendors();
+  renderStallTagging();
   btn.disabled = false;
   btn.textContent = originalLabel;
 
