@@ -1674,7 +1674,7 @@
 
     <div class="grid-2">
       <div class="card">
-        <h3>Log a Setup Expense</h3>
+        <h3 id="setupcost-form-heading">Log a Setup Expense</h3>
         <form class="entry-form" id="form-setupcost" style="margin-bottom:0;">
           <div class="field"><label>Date</label><input type="date" name="date" required></div>
           <div class="field wide">
@@ -1685,9 +1685,19 @@
           <div class="field"><label>Vendor</label><input type="text" name="vendor" placeholder="e.g. Sharma Plumbing Co."></div>
           <div class="field"><label>Amount</label><input type="number" step="0.01" name="amount" placeholder="0.00" required></div>
           <div class="field"><label>Paid By</label><select name="paidBy" id="setupcost-paidby-select"><option value="">Business / Loan</option></select></div>
+          <div class="field wide"><label>Bill / Receipt (optional)</label><input type="file" id="setupcost-file-input"></div>
           <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
-          <button type="submit" class="btn">Add Expense</button>
+          <button type="submit" class="btn" id="setupcost-submit-btn">Add Expense</button>
+          <button type="button" class="btn ghost" id="setupcost-cancel-btn" style="display:none;">Cancel</button>
         </form>
+        <div id="setupcost-current-file-wrap" style="display:none; margin-top:12px;">
+          <span class="helper-note" style="margin:0;">Currently attached: <span id="setupcost-current-file-name"></span> — choose a new file above to replace it.</span>
+          <button type="button" id="setupcost-remove-current-file" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove Document</button>
+        </div>
+        <div id="setupcost-file-preview-wrap" style="display:none; margin-top:12px;">
+          <span class="helper-note" style="margin:0;">Attached: <span id="setupcost-file-preview-name"></span></span>
+          <button type="button" id="setupcost-file-clear" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove</button>
+        </div>
       </div>
       <div class="card">
         <h3>Spend by Category</h3>
@@ -1697,7 +1707,7 @@
 
     <div class="table-wrap" style="margin-top:20px;">
       <table>
-        <thead><tr><th>Date</th><th>Group</th><th>Category</th><th>Vendor</th><th class="num">Amount</th><th>Paid By</th><th>Notes</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th>Group</th><th>Category</th><th>Vendor</th><th class="num">Amount</th><th>Paid By</th><th>Document</th><th>Notes</th><th></th></tr></thead>
         <tbody id="table-setupcosts"></tbody>
       </table>
     </div>
@@ -3346,16 +3356,130 @@ function refreshSetupCostPaidBySelect(){
   sel.value = current || '';
 }
 
+let setupCostFileData = '';
+let setupCostFileMeta = null;
+let editingSetupCostId = null;
+let setupCostRemoveExistingFile = false;
+
+document.getElementById('setupcost-file-input').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 14_000_000){
+    alert('That file is a bit large — please pick something under ~14MB.');
+    e.target.value = '';
+    setupCostFileData = '';
+    setupCostFileMeta = null;
+    document.getElementById('setupcost-file-preview-wrap').style.display = 'none';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    setupCostFileData = reader.result;
+    setupCostFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+    document.getElementById('setupcost-file-preview-name').textContent = file.name;
+    document.getElementById('setupcost-file-preview-wrap').style.display = 'block';
+    setupCostRemoveExistingFile = false;
+    document.getElementById('setupcost-current-file-wrap').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('setupcost-file-clear').addEventListener('click', ()=>{
+  setupCostFileData = '';
+  setupCostFileMeta = null;
+  document.getElementById('setupcost-file-input').value = '';
+  document.getElementById('setupcost-file-preview-wrap').style.display = 'none';
+});
+document.getElementById('setupcost-remove-current-file').addEventListener('click', ()=>{
+  setupCostRemoveExistingFile = true;
+  document.getElementById('setupcost-current-file-wrap').style.display = 'none';
+});
+
+function viewSetupCostDoc(id){
+  const c = state.setupCosts.find(x=>String(x.id)===String(id));
+  if(!c || !c.fileData) return;
+  const blob = base64ToBlob(c.fileData, c.fileType || 'application/octet-stream');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 60_000);
+}
+
+function resetSetupCostForm(){
+  editingSetupCostId = null;
+  setupCostRemoveExistingFile = false;
+  setupCostFileData = '';
+  setupCostFileMeta = null;
+  document.getElementById('form-setupcost').reset();
+  document.querySelector('#form-setupcost [name=date]').value = todayStr();
+  document.getElementById('setupcost-file-preview-wrap').style.display = 'none';
+  document.getElementById('setupcost-current-file-wrap').style.display = 'none';
+  document.getElementById('setupcost-form-heading').textContent = 'Log a Setup Expense';
+  document.getElementById('setupcost-submit-btn').textContent = 'Add Expense';
+  document.getElementById('setupcost-cancel-btn').style.display = 'none';
+}
+
+function startEditSetupCost(id){
+  const c = state.setupCosts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  editingSetupCostId = id;
+  setupCostRemoveExistingFile = false;
+  setupCostFileData = '';
+  setupCostFileMeta = null;
+
+  const form = document.getElementById('form-setupcost');
+  form.querySelector('[name=date]').value = c.date;
+  form.querySelector('[name=category]').value = c.category;
+  form.querySelector('[name=vendor]').value = c.vendor || '';
+  form.querySelector('[name=amount]').value = c.amount;
+  form.querySelector('[name=paidBy]').value = c.paidBy || '';
+  form.querySelector('[name=notes]').value = c.notes || '';
+  document.getElementById('setupcost-file-input').value = '';
+  document.getElementById('setupcost-file-preview-wrap').style.display = 'none';
+
+  const currentFileWrap = document.getElementById('setupcost-current-file-wrap');
+  if(c.fileData){
+    document.getElementById('setupcost-current-file-name').textContent = c.fileName || 'attached file';
+    currentFileWrap.style.display = 'block';
+  } else {
+    currentFileWrap.style.display = 'none';
+  }
+
+  document.getElementById('setupcost-form-heading').textContent = `Editing: ${c.category}${c.vendor ? ' — '+c.vendor : ''} (${c.date})`;
+  document.getElementById('setupcost-submit-btn').textContent = 'Update Expense';
+  document.getElementById('setupcost-cancel-btn').style.display = 'inline-block';
+  document.getElementById('panel-setupcosts').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+document.getElementById('setupcost-cancel-btn').addEventListener('click', resetSetupCostForm);
+
 document.getElementById('form-setupcost').addEventListener('submit', async e=>{
   e.preventDefault();
   const f = new FormData(e.target);
+
+  let fileFields;
+  if(setupCostFileMeta){
+    fileFields = { fileName: setupCostFileMeta.name, fileType: setupCostFileMeta.type, fileSize: setupCostFileMeta.size, fileData: setupCostFileData };
+  } else if(editingSetupCostId && setupCostRemoveExistingFile){
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  } else if(editingSetupCostId){
+    const original = state.setupCosts.find(x=>String(x.id)===String(editingSetupCostId));
+    fileFields = { fileName: original?.fileName||'', fileType: original?.fileType||'', fileSize: original?.fileSize||0, fileData: original?.fileData||'' };
+  } else {
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  }
+
   const payload = { date: f.get('date'), category: f.get('category'), vendor: f.get('vendor')||'',
-    amount:+f.get('amount'), paidBy: f.get('paidBy')||'', notes: f.get('notes')||'' };
+    amount:+f.get('amount'), paidBy: f.get('paidBy')||'', notes: f.get('notes')||'', ...fileFields };
   try{
-    const row = await apiCreate('setupCosts', payload);
-    state.setupCosts.unshift(row);
-    renderSetupCosts(); e.target.reset();
-    document.querySelector('#form-setupcost [name=date]').value = todayStr();
+    if(editingSetupCostId){
+      const updated = await apiUpdate('setupCosts', editingSetupCostId, payload);
+      const idx = state.setupCosts.findIndex(x=>String(x.id)===String(editingSetupCostId));
+      if(idx>-1) state.setupCosts[idx] = updated;
+    } else {
+      const row = await apiCreate('setupCosts', payload);
+      state.setupCosts.unshift(row);
+    }
+    resetSetupCostForm();
+    renderSetupCosts();
   }catch(err){ alert(err.message); }
 });
 
@@ -3370,9 +3494,14 @@ function renderSetupCosts(){
   const tbody = document.getElementById('table-setupcosts');
   tbody.innerHTML = filtered.length ? filtered.map(c=>`
     <tr><td>${c.date}</td><td><span class="segment-tag tag-catering">${groupFor(c.category)}</span></td><td>${c.category}</td><td>${c.vendor||'—'}</td><td class="num">${fmt(c.amount)}</td>
-    <td>${c.paidBy||'Business'}</td><td>${c.notes||''}</td>
-    <td><button class="del-btn" data-seg="setupCosts" data-id="${c.id}">✕</button></td></tr>`).join('')
-    : `<tr class="empty-row"><td colspan="8">${setupCostGroupFilter === 'all' ? 'No setup costs logged yet — add plan approvals, plumbing, construction, and equipment spend above.' : 'No expenses logged yet in '+setupCostGroupFilter+'.'}</td></tr>`;
+    <td>${c.paidBy||'Business'}</td>
+    <td>${c.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewSetupCostDoc('${c.id}')">View</button>` : '—'}</td>
+    <td>${c.notes||''}</td>
+    <td style="white-space:nowrap;">
+      <button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="startEditSetupCost('${c.id}')">Edit</button>
+      <button class="del-btn" data-seg="setupCosts" data-id="${c.id}">✕</button>
+    </td></tr>`).join('')
+    : `<tr class="empty-row"><td colspan="9">${setupCostGroupFilter === 'all' ? 'No setup costs logged yet — add plan approvals, plumbing, construction, and equipment spend above.' : 'No expenses logged yet in '+setupCostGroupFilter+'.'}</td></tr>`;
 
   const byCategory = {};
   filtered.forEach(c=>{ byCategory[c.category] = (byCategory[c.category]||0) + c.amount; });

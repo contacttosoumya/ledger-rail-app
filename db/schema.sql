@@ -256,6 +256,12 @@ CREATE TABLE IF NOT EXISTS setup_costs (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Optional supporting document (bill/receipt/permit copy/invoice) — same
+-- base64-in-DB pattern as monthly_expenses and important_documents.
+ALTER TABLE setup_costs ADD COLUMN IF NOT EXISTS file_name TEXT DEFAULT '';
+ALTER TABLE setup_costs ADD COLUMN IF NOT EXISTS file_type TEXT DEFAULT '';
+ALTER TABLE setup_costs ADD COLUMN IF NOT EXISTS file_size INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE setup_costs ADD COLUMN IF NOT EXISTS file_data TEXT DEFAULT '';
 
 -- Master list of setup-cost categories, grouped, in display order.
 -- The frontend builds its category dropdown and sidebar submenu entirely

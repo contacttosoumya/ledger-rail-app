@@ -308,6 +308,7 @@ app.use('/api/emi-payments', crudRouter('emi_payments', [
 app.use('/api/setup-costs', crudRouter('setup_costs', [
   F.string('date', 'date'), F.string('category', 'category'), F.string('vendor', 'vendor'),
   F.number('amount', 'amount'), F.string('paidBy', 'paid_by'), F.string('notes', 'notes'),
+  F.string('fileName', 'file_name'), F.string('fileType', 'file_type'), F.number('fileSize', 'file_size'), F.string('fileData', 'file_data'),
 ], 'id DESC', 'setupcosts'));
 
 app.use('/api/setup-cost-categories', crudRouter('setup_cost_categories', [
