@@ -412,7 +412,7 @@ DECLARE
   superadmin_id BIGINT; owner_id BIGINT; manager_id BIGINT; partner_id BIGINT; staff_id BIGINT;
   resources TEXT[] := ARRAY['overview','daily','catering','costing',
     'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor',
-    'contributions','setupcosts','loans','ai','admin','menucatalog','importantdocs'];
+    'contributions','setupcosts','loans','ai','admin','menucatalog','importantdocs','monthlyexpenses'];
   r TEXT;
 BEGIN
   SELECT id INTO superadmin_id FROM roles WHERE name = 'Super Admin';
@@ -439,7 +439,7 @@ BEGIN
 
   -- Manager: full CRUD on day-to-day operations; view-only on capital/financing; no admin
   FOREACH r IN ARRAY ARRAY['overview','daily','catering','costing',
-    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog','importantdocs'] LOOP
+    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog','importantdocs','monthlyexpenses'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (manager_id, r, true, true, true)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -454,7 +454,7 @@ BEGIN
   ON CONFLICT (role_id, resource) DO NOTHING;
 
   -- Partner: view-only across financial reporting and capital, plus overview
-  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai','importantdocs'] LOOP
+  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai','importantdocs','monthlyexpenses'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (partner_id, r, true, false, false)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -774,4 +774,43 @@ INSERT INTO dropdown_options (list_name, value, sort_order) VALUES
   ('document_category', 'Certificate', 50),
   ('document_category', 'Lease', 60),
   ('document_category', 'Other', 70)
+ON CONFLICT (list_name, value) DO UPDATE SET sort_order = EXCLUDED.sort_order;
+
+-- ===========================================================================
+-- MONTHLY EXPENSES — recurring operational bills (rent, electricity, water,
+-- insurance, etc.), tracked month by month. Deliberately separate from
+-- Setup Costs, which is one-time capital expenditure, not recurring bills.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS monthly_expenses (
+  id BIGSERIAL PRIMARY KEY,
+  category TEXT NOT NULL DEFAULT '',
+  vendor TEXT DEFAULT '',
+  amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  expense_month DATE NOT NULL, -- always the 1st of the month, e.g. 2026-08-01 means "August 2026"
+  payment_status TEXT DEFAULT 'Unpaid',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_monthly_expenses_month ON monthly_expenses(expense_month DESC);
+CREATE INDEX IF NOT EXISTS idx_monthly_expenses_category ON monthly_expenses(category);
+-- Optional supporting document (bill/receipt/invoice) — same base64-in-DB
+-- pattern as important_documents. All nullable/blank since it's optional.
+ALTER TABLE monthly_expenses ADD COLUMN IF NOT EXISTS file_name TEXT DEFAULT '';
+ALTER TABLE monthly_expenses ADD COLUMN IF NOT EXISTS file_type TEXT DEFAULT '';
+ALTER TABLE monthly_expenses ADD COLUMN IF NOT EXISTS file_size INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE monthly_expenses ADD COLUMN IF NOT EXISTS file_data TEXT DEFAULT '';
+
+INSERT INTO dropdown_options (list_name, value, sort_order) VALUES
+  ('expense_category', 'Rent', 10),
+  ('expense_category', 'Electricity', 20),
+  ('expense_category', 'Water', 30),
+  ('expense_category', 'Gas', 40),
+  ('expense_category', 'Internet', 50),
+  ('expense_category', 'Phone', 60),
+  ('expense_category', 'Insurance', 70),
+  ('expense_category', 'Software & Subscriptions', 80),
+  ('expense_category', 'Waste Disposal', 90),
+  ('expense_category', 'Pest Control', 100),
+  ('expense_category', 'Security', 110),
+  ('expense_category', 'Other', 120)
 ON CONFLICT (list_name, value) DO UPDATE SET sort_order = EXCLUDED.sort_order;

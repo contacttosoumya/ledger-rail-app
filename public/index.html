@@ -938,6 +938,10 @@
           <div class="helper-note" id="submenu-setupcosts-loading" style="padding:6px 12px 6px 42px; color:var(--ink-faint);">Loading categories…</div>
         </div></div>
       </div>
+      <button class="nav-item" data-tab="monthlyexpenses" data-label="Monthly Expenses">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h14" stroke="currentColor" stroke-width="1.6"/><path d="M7 2.5v3M13 2.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M6.5 11h2M6.5 13.5h2M11.5 11h2M11.5 13.5h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span>Monthly Expenses</span>
+      </button>
       <button class="nav-item" data-tab="loans" data-label="Loans &amp; EMI">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2.5 8 10 3l7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 8v8h13V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5v4M10 10.5v4M13 10.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M2.5 16.5h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <span>Loans &amp; EMI</span>
@@ -1699,6 +1703,48 @@
     </div>
   </section>
 
+  <!-- MONTHLY EXPENSES -->
+  <section class="panel" id="panel-monthlyexpenses">
+    <h2 class="section-title">Monthly Expenses</h2>
+    <p class="section-sub">Rent, electricity, water, insurance, and every other recurring bill — tracked month by month</p>
+
+    <form class="entry-form" id="form-monthlyexpense">
+      <div class="field"><label>Category</label><select name="category" id="monthlyexpense-category-select"></select></div>
+      <div class="field"><label>Vendor / Payee</label><input type="text" name="vendor" placeholder="e.g. Duke Energy"></div>
+      <div class="field"><label>Amount</label><input type="number" step="0.01" name="amount" placeholder="0.00" required></div>
+      <div class="field"><label>Month</label><input type="month" name="expenseMonth" id="monthlyexpense-month-input" required></div>
+      <div class="field"><label>Payment Status</label><select name="paymentStatus" id="monthlyexpense-paymentstatus-select"></select></div>
+      <div class="field"><label>Bill / Receipt (optional)</label><input type="file" id="monthlyexpense-file-input"></div>
+      <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
+      <button type="submit" class="btn">Add Expense</button>
+    </form>
+    <div id="monthlyexpense-file-preview-wrap" style="display:none; margin-top:-10px; margin-bottom:16px;">
+      <span class="helper-note" style="margin:0;">Attached: <span id="monthlyexpense-file-preview-name"></span></span>
+      <button type="button" id="monthlyexpense-file-clear" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove</button>
+    </div>
+    <p class="helper-note" style="margin-top:-8px; margin-bottom:20px;">
+      Same bills every month? <button type="button" id="monthlyexpense-copy-btn" class="btn ghost" style="padding:4px 12px; font-size:11.5px; vertical-align:middle;">Copy Last Month's Expenses →</button>
+      copies every line item from the most recent month into the one you're currently viewing below (amounts stay editable, payment status resets to Unpaid).
+    </p>
+
+    <div class="field" style="max-width:220px; margin-bottom:16px;">
+      <label>Viewing Month</label>
+      <input type="month" id="monthlyexpense-view-month">
+    </div>
+    <div class="kpi-row" id="monthlyexpense-kpis" style="margin-bottom:20px;"></div>
+
+    <div class="table-wrap" style="margin-bottom:28px;">
+      <table>
+        <thead><tr><th>Category</th><th>Vendor</th><th class="num">Amount</th><th>Payment Status</th><th>Document</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="table-monthlyexpense-current"></tbody>
+      </table>
+    </div>
+
+    <h3 class="subhead">All Months</h3>
+    <p class="helper-note" style="margin-top:-6px; margin-bottom:14px;">Every month you've logged expenses for, most recent first — click to expand.</p>
+    <div id="monthlyexpense-history"></div>
+  </section>
+
   <!-- LOANS & EMI -->
   <section class="panel" id="panel-loans">
     <h2 class="section-title">Loans &amp; EMI</h2>
@@ -2125,7 +2171,7 @@ function stallDateLabel(v){
 
 document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
 
-let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [], importantDocs: [] };
+let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [], importantDocs: [], monthlyExpenses: [] };
 let chartInstance = null;
 let partnerChartInstance = null;
 
@@ -2157,6 +2203,7 @@ const ENDPOINTS = {
   menuCombos: '/api/menu-combos',
   menuComboSteps: '/api/menu-combo-steps',
   menuComboStepItems: '/api/menu-combo-step-items',
+  monthlyExpenses: '/api/monthly-expenses',
   cateringPackages: '/api/catering-packages',
   stallPackages: '/api/stall-packages',
   stallPackageSelections: '/api/stall-package-selections',
@@ -2230,6 +2277,8 @@ async function loadAll(){
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
+  populateStaticDropdown('expense_category', 'monthlyexpense-category-select', 'Category');
+  populateStaticDropdown('payment_status', 'monthlyexpense-paymentstatus-select', 'Status');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'stallvendor-paymentstatus-select', 'Status');
@@ -2257,6 +2306,7 @@ function renderAll(){
   const renderers = [
     renderDaily, renderCatering, renderCateringPackages, renderEvents, renderCosting, renderOverview,
     refreshPartnerSelect, refreshLoanSelect, renderContributions, renderLoans,
+    renderMonthlyExpenses,
     refreshSetupCostPaidBySelect, renderSetupCosts,
     renderEventPackages, renderEventPrep, renderEventInvoices, renderEventPackageSelections,
     renderStallVendors,
@@ -2896,6 +2946,202 @@ function renderContributions(){
     <div class="receipt"><div class="label">Largest Contributor</div><div class="value" style="font-size:18px;">${top?top.name:'—'}</div><div class="sub">${top?fmt(top.amt):'—'}</div></div>
     <div class="receipt"><div class="label">Entries Logged</div><div class="value">${state.contributions.length}</div><div class="sub">contribution records</div></div>
   `;
+}
+
+// ---------- MONTHLY EXPENSES ----------
+const monthInputToDate = (monthStr) => monthStr ? `${monthStr}-01` : '';
+const dateToMonthInput = (dateStr) => dateStr ? dateStr.slice(0,7) : '';
+function formatMonthLabel(monthStr){
+  if(!monthStr) return '';
+  const [y,m] = monthStr.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleDateString(undefined, { year:'numeric', month:'long' });
+}
+
+document.getElementById('monthlyexpense-month-input').value = dateToMonthInput(todayStr());
+document.getElementById('monthlyexpense-view-month').value = dateToMonthInput(todayStr());
+
+let monthlyExpenseFileData = '';
+let monthlyExpenseFileMeta = null;
+
+document.getElementById('monthlyexpense-file-input').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 14_000_000){
+    alert('That file is a bit large — please pick something under ~14MB.');
+    e.target.value = '';
+    monthlyExpenseFileData = '';
+    monthlyExpenseFileMeta = null;
+    document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    monthlyExpenseFileData = reader.result;
+    monthlyExpenseFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+    document.getElementById('monthlyexpense-file-preview-name').textContent = file.name;
+    document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('monthlyexpense-file-clear').addEventListener('click', ()=>{
+  monthlyExpenseFileData = '';
+  monthlyExpenseFileMeta = null;
+  document.getElementById('monthlyexpense-file-input').value = '';
+  document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+});
+
+function viewMonthlyExpenseDoc(id){
+  const x = state.monthlyExpenses.find(m=>String(m.id)===String(id));
+  if(!x || !x.fileData) return;
+  const blob = base64ToBlob(x.fileData, x.fileType || 'application/octet-stream');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 60_000);
+}
+
+document.getElementById('form-monthlyexpense').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const monthVal = f.get('expenseMonth');
+  if(!monthVal){ alert('Pick a month.'); return; }
+  const payload = {
+    category: f.get('category')||'', vendor: f.get('vendor')||'', amount:+f.get('amount')||0,
+    expenseMonth: monthInputToDate(monthVal), paymentStatus: f.get('paymentStatus')||'Unpaid', notes: f.get('notes')||'',
+    fileName: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.name : '',
+    fileType: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.type : '',
+    fileSize: monthlyExpenseFileMeta ? monthlyExpenseFileMeta.size : 0,
+    fileData: monthlyExpenseFileData || '',
+  };
+  try{
+    const row = await apiCreate('monthlyExpenses', payload);
+    state.monthlyExpenses.unshift(row);
+    // Jump the "viewing" month to match what was just added, so it's immediately visible.
+    document.getElementById('monthlyexpense-view-month').value = monthVal;
+    renderMonthlyExpenses();
+    e.target.reset();
+    document.getElementById('monthlyexpense-month-input').value = monthVal;
+    monthlyExpenseFileData = '';
+    monthlyExpenseFileMeta = null;
+    document.getElementById('monthlyexpense-file-preview-wrap').style.display = 'none';
+  }catch(err){ alert(err.message); }
+});
+
+document.getElementById('monthlyexpense-view-month').addEventListener('change', renderMonthlyExpenses);
+
+document.getElementById('monthlyexpense-copy-btn').addEventListener('click', async ()=>{
+  const viewMonth = document.getElementById('monthlyexpense-view-month').value;
+  if(!viewMonth){ alert('Pick a month to copy into first.'); return; }
+  const viewMonthDate = monthInputToDate(viewMonth);
+
+  const priorMonths = Array.from(new Set(state.monthlyExpenses.map(x=>x.expenseMonth)))
+    .filter(m => m < viewMonthDate)
+    .sort((a,b) => b.localeCompare(a));
+  if(!priorMonths.length){
+    alert("There's no earlier month with expenses logged to copy from.");
+    return;
+  }
+  const sourceMonth = priorMonths[0];
+  const sourceItems = state.monthlyExpenses.filter(x=>x.expenseMonth===sourceMonth);
+
+  const btn = document.getElementById('monthlyexpense-copy-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Copying…';
+
+  let succeeded = 0, failed = 0;
+  for(const item of sourceItems){
+    try{
+      const row = await apiCreate('monthlyExpenses', {
+        category: item.category, vendor: item.vendor, amount: item.amount,
+        expenseMonth: viewMonthDate, paymentStatus: 'Unpaid', notes: item.notes,
+      });
+      state.monthlyExpenses.unshift(row);
+      succeeded++;
+    }catch(err){ failed++; }
+  }
+  renderMonthlyExpenses();
+  btn.disabled = false; btn.textContent = originalLabel;
+  alert(`Copied ${succeeded} expense${succeeded!==1?'s':''} from ${formatMonthLabel(dateToMonthInput(sourceMonth))} into ${formatMonthLabel(viewMonth)}.${failed ? ` ${failed} failed.` : ''}`);
+});
+
+function renderMonthlyExpenseCurrent(){
+  const viewMonth = document.getElementById('monthlyexpense-view-month').value;
+  const viewMonthDate = monthInputToDate(viewMonth);
+  const items = state.monthlyExpenses.filter(x=>x.expenseMonth===viewMonthDate);
+
+  const kpiRow = document.getElementById('monthlyexpense-kpis');
+  if(kpiRow){
+    const total = items.reduce((s,x)=>s+x.amount,0);
+    const paid = items.filter(x=>x.paymentStatus==='Paid in Full').reduce((s,x)=>s+x.amount,0);
+    const outstanding = total - paid;
+    kpiRow.innerHTML = `
+      <div class="receipt"><div class="label">${formatMonthLabel(viewMonth) || 'This Month'}</div><div class="value">${items.length}</div><div class="sub">expense${items.length!==1?'s':''} logged</div></div>
+      <div class="receipt"><div class="label">Total</div><div class="value">${fmt(total)}</div><div class="sub">all categories</div></div>
+      <div class="receipt"><div class="label">Paid</div><div class="value pos">${fmt(paid)}</div><div class="sub">marked Paid in Full</div></div>
+      <div class="receipt"><div class="label">Outstanding</div><div class="value ${outstanding>0?'neg':'pos'}">${fmt(outstanding)}</div><div class="sub">not yet fully paid</div></div>
+    `;
+  }
+
+  const tbody = document.getElementById('table-monthlyexpense-current');
+  if(!tbody) return;
+  tbody.innerHTML = items.length ? items.map(x=>{
+    const tag = PAYMENT_STATUS_TAG[x.paymentStatus] || 'tag-events';
+    return `<tr>
+      <td>${esc(x.category)}</td>
+      <td>${esc(x.vendor)||'—'}</td>
+      <td class="num">${fmt(x.amount)}</td>
+      <td><span class="segment-tag ${tag}">${x.paymentStatus}</span></td>
+      <td>${x.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewMonthlyExpenseDoc('${x.id}')">View</button>` : '—'}</td>
+      <td>${esc(x.notes)}</td>
+      <td><button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button></td>
+    </tr>`;
+  }).join('') : `<tr class="empty-row"><td colspan="7">No expenses logged for ${formatMonthLabel(viewMonth)||'this month'} yet — add one above${state.monthlyExpenses.length ? ', or copy from last month' : ''}.</td></tr>`;
+}
+
+function renderMonthlyExpenseHistory(){
+  const wrap = document.getElementById('monthlyexpense-history');
+  if(!wrap) return;
+  const openMonths = new Set(Array.from(wrap.querySelectorAll('details[open]')).map(d => d.dataset.month));
+
+  const months = Array.from(new Set(state.monthlyExpenses.map(x=>x.expenseMonth))).sort((a,b)=>b.localeCompare(a));
+  if(!months.length){
+    wrap.innerHTML = `<p class="helper-note">No expenses logged yet.</p>`;
+    return;
+  }
+
+  wrap.innerHTML = months.map(monthDate => {
+    const items = state.monthlyExpenses.filter(x=>x.expenseMonth===monthDate);
+    const total = items.reduce((s,x)=>s+x.amount,0);
+    const monthLabel = formatMonthLabel(dateToMonthInput(monthDate));
+    return `
+      <details data-month="${monthDate}" style="margin-bottom:10px; border:1px solid var(--line-soft); border-radius:var(--radius); overflow:hidden; background:var(--white);" ${openMonths.has(monthDate) ? 'open' : ''}>
+        <summary style="cursor:pointer; padding:12px 16px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-family:var(--font-ui); font-weight:700; font-size:14px; color:var(--ink);">${monthLabel} <span style="font-weight:400; color:var(--ink-faint); font-size:12px;">(${items.length} expense${items.length!==1?'s':''})</span></span>
+          <span style="font-family:var(--font-mono); font-weight:600; color:var(--green);">${fmt(total)}</span>
+        </summary>
+        <div class="table-wrap" style="margin:0 16px 16px;">
+          <table>
+            <thead><tr><th>Category</th><th>Vendor</th><th class="num">Amount</th><th>Payment Status</th><th>Document</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+              ${items.map(x=>{
+                const tag = PAYMENT_STATUS_TAG[x.paymentStatus] || 'tag-events';
+                return `<tr>
+                  <td>${esc(x.category)}</td><td>${esc(x.vendor)||'—'}</td><td class="num">${fmt(x.amount)}</td>
+                  <td><span class="segment-tag ${tag}">${x.paymentStatus}</span></td>
+                  <td>${x.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewMonthlyExpenseDoc('${x.id}')">View</button>` : '—'}</td>
+                  <td>${esc(x.notes)}</td>
+                  <td><button class="del-btn" data-seg="monthlyExpenses" data-id="${x.id}">✕</button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </details>`;
+  }).join('');
+}
+
+function renderMonthlyExpenses(){
+  renderMonthlyExpenseCurrent();
+  renderMonthlyExpenseHistory();
 }
 
 function renderLoans(){
@@ -5125,6 +5371,8 @@ function refreshAllStaticDropdowns(){
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
+  populateStaticDropdown('expense_category', 'monthlyexpense-category-select', 'Category');
+  populateStaticDropdown('payment_status', 'monthlyexpense-paymentstatus-select', 'Status');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('station_tag', 'menuitem-station-select', 'Station');
@@ -5472,7 +5720,7 @@ const MENU_LABELS = {
   eventprep:'Inventory & Prep Planning', eventinvoicing:'Invoicing & Billing',
   eventsummary:'Event Summaries', contributions:'Partner Contributions',
   setupcosts:'Setup Costs', loans:'Loans & EMI', ai:'AI Insights', admin:'Admin Panel',
-  activity:'Activity Log', stallvendor:'Stall Vendor', importantdocs:'Important Docs',
+  activity:'Activity Log', stallvendor:'Stall Vendor', importantdocs:'Important Docs', monthlyexpenses:'Monthly Expenses',
 };
 
 function renderAdminPermissions(){
@@ -5909,7 +6157,7 @@ const NAV_RESOURCE_MAP = {
   eventbookings:'eventbookings', eventsummary:'eventsummary', eventcatalog:'eventcatalog',
   eventtagging:'eventcatalog', foodprepcosting:'eventcatalog', eventrevenue:'eventcatalog',
   eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor', stalltagging:'stallvendor',
-  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs',
+  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs', monthlyexpenses:'monthlyexpenses',
   activity:'activity',
   'admin-categories':'admin', 'admin-dropdowns':'admin', 'admin-eventcatalog':'admin',
   'admin-eventassignments':'admin', 'admin-users':'admin', 'admin-permissions':'admin',
