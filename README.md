@@ -80,6 +80,26 @@ Check backup status any time under **Admin Panel → Backups** in the app —
 it shows the real result of each run (success/failure, timestamp, and detail),
 read directly from what the script actually did, not just whether cron itself is configured.
 
+## 6. Syncing business data to Neon (optional)
+
+If you're running a Neon Postgres database elsewhere (e.g. behind a Railway
+deployment) and want to push your local business data up to it, **without**
+disturbing whoever is already logged into that Neon-backed app:
+
+```bash
+NEON_DATABASE_URL="postgresql://...neon connection string..." CONFIRM_SYNC=yes npm run db:sync-neon
+```
+
+This is a one-way sync (local → Neon) that replaces business data (menu items,
+sales, events, catalogs, etc.) on Neon with what's currently in your local
+database. It deliberately **never touches** `users`, `roles`, `role_permissions`,
+`user_menu_overrides`, `session`, or `activity_log` on the Neon side — existing
+logins, permissions, and active sessions on Neon survive untouched.
+
+`CONFIRM_SYNC=yes` is required on purpose, since this truncates business
+tables on Neon before restoring — there's no undo once it runs. Leave it off
+to see exactly what the script would do first.
+
 ## Project structure
 
 ```
@@ -88,6 +108,7 @@ rollcall-ops/
   db/schema.sql        # PostgreSQL table definitions
   scripts/setup-db.js  # Runs schema.sql against DATABASE_URL
   scripts/backup-database.js  # Mirrors the primary DB into a second one — run via cron, see "Set up daily backups"
+  scripts/sync-to-neon.js     # Pushes local business data to Neon, protecting login tables — see "Syncing business data to Neon"
   public/index.html    # Frontend (single page, no build step)
   .env.example
   docker-compose.yml    # Optional local Postgres

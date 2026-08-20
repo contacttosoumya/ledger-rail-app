@@ -14,7 +14,10 @@ async function main() {
     await pool.query(schema);
     console.log('Database schema created (or already up to date).');
   } catch (err) {
-    console.error('Failed to set up schema:', err.message);
+    console.error('Failed to set up schema:', err.message || err);
+    if (err.code) console.error(`PostgreSQL error code: ${err.code}`);
+    console.error(`Database host: ${pool.options.host || 'default'}:${pool.options.port || 'default'}`);
+    console.error(`Database name: ${pool.options.database || 'default'}`);
     process.exit(1);
   } finally {
     await pool.end();

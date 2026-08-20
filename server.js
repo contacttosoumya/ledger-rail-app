@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 const ALL_RESOURCES = [
   'overview', 'daily', 'catering', 'costing',
   'eventbookings', 'eventcatalog', 'eventprep', 'eventinvoicing', 'eventsummary', 'stallvendor',
-  'contributions', 'setupcosts', 'loans', 'ai', 'admin', 'activity', 'menucatalog',
+  'contributions', 'setupcosts', 'loans', 'ai', 'admin', 'activity', 'menucatalog', 'importantdocs',
 ];
 
 if (!process.env.DATABASE_URL) {
@@ -36,7 +36,7 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const app = express();
-app.use(express.json({ limit: '8mb' })); // generous enough for base64-encoded photos (profile pics, menu item images)
+app.use(express.json({ limit: '20mb' })); // generous enough for base64-encoded photos and scanned PDF documents
 app.use((err, req, res, next) => {
   if (err && err.type === 'entity.too.large') {
     return res.status(413).json({ error: 'That upload is too large. Please use a smaller image.' });
@@ -359,6 +359,12 @@ app.use('/api/stall-package-selections', crudRouter('stall_package_selections', 
   F.number('quantity', 'quantity'), F.number('discountPct', 'discount_pct'), F.number('discountAmount', 'discount_amount'),
   F.string('notes', 'notes'),
 ], 'id DESC', 'stallvendor', undefined, 'This item is already assigned to this stall on that date — edit its quantity instead, or pick a different date.'));
+
+app.use('/api/important-documents', crudRouter('important_documents', [
+  F.string('title', 'title'), F.string('category', 'category'), F.string('fileName', 'file_name'),
+  F.string('fileType', 'file_type'), F.number('fileSize', 'file_size'), F.string('fileData', 'file_data'),
+  F.string('notes', 'notes'),
+], 'id DESC', 'importantdocs'));
 
 app.use('/api/menu-categories', crudRouter('menu_categories', [
   F.string('name', 'name'), F.numberOrNull('parentId', 'parent_id'), F.number('sortOrder', 'sort_order'),

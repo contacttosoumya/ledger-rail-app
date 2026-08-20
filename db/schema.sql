@@ -412,7 +412,7 @@ DECLARE
   superadmin_id BIGINT; owner_id BIGINT; manager_id BIGINT; partner_id BIGINT; staff_id BIGINT;
   resources TEXT[] := ARRAY['overview','daily','catering','costing',
     'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor',
-    'contributions','setupcosts','loans','ai','admin','menucatalog'];
+    'contributions','setupcosts','loans','ai','admin','menucatalog','importantdocs'];
   r TEXT;
 BEGIN
   SELECT id INTO superadmin_id FROM roles WHERE name = 'Super Admin';
@@ -439,7 +439,7 @@ BEGIN
 
   -- Manager: full CRUD on day-to-day operations; view-only on capital/financing; no admin
   FOREACH r IN ARRAY ARRAY['overview','daily','catering','costing',
-    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog'] LOOP
+    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog','importantdocs'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (manager_id, r, true, true, true)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -454,7 +454,7 @@ BEGIN
   ON CONFLICT (role_id, resource) DO NOTHING;
 
   -- Partner: view-only across financial reporting and capital, plus overview
-  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai'] LOOP
+  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai','importantdocs'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (partner_id, r, true, false, false)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -747,3 +747,31 @@ CREATE TABLE IF NOT EXISTS stall_package_selections (
 
 CREATE INDEX IF NOT EXISTS idx_stall_package_selections_vendor ON stall_package_selections(stall_vendor_id);
 CREATE INDEX IF NOT EXISTS idx_stall_package_selections_package ON stall_package_selections(package_id);
+
+-- ===========================================================================
+-- IMPORTANT DOCS — licenses, permits, insurance, contracts, and any other
+-- file worth keeping on hand. Stored as base64 in the DB, same pattern as
+-- profile photos and menu item images elsewhere in this app.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS important_documents (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  category TEXT DEFAULT '',
+  file_name TEXT NOT NULL DEFAULT '',
+  file_type TEXT DEFAULT '',
+  file_size INTEGER NOT NULL DEFAULT 0,
+  file_data TEXT NOT NULL DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_important_documents_category ON important_documents(category);
+
+INSERT INTO dropdown_options (list_name, value, sort_order) VALUES
+  ('document_category', 'License', 10),
+  ('document_category', 'Permit', 20),
+  ('document_category', 'Insurance', 30),
+  ('document_category', 'Contract', 40),
+  ('document_category', 'Certificate', 50),
+  ('document_category', 'Lease', 60),
+  ('document_category', 'Other', 70)
+ON CONFLICT (list_name, value) DO UPDATE SET sort_order = EXCLUDED.sort_order;

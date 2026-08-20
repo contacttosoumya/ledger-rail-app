@@ -11,6 +11,7 @@
     "dev": "node --watch server.js",
     "db:setup": "node scripts/setup-db.js",
     "db:backup": "node scripts/backup-database.js",
+    "db:sync-neon": "node scripts/sync-to-neon.js",
     "db:seed-alapan": "node scripts/seed-alapan-menu.js",
     "db:seed-partners": "node scripts/seed-partner-accounts.js"
   },

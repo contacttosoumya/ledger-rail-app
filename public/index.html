@@ -941,6 +941,10 @@
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M2.5 8 10 3l7.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 8v8h13V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5v4M10 10.5v4M13 10.5v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M2.5 16.5h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <span>Loans &amp; EMI</span>
       </button>
+      <button class="nav-item" data-tab="importantdocs" data-label="Important Docs">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M5.5 2.5h6l3 3v12h-9v-15Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 2.5v3h3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10h6M7 12.7h6M7 15.4h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>Important Docs</span>
+      </button>
       <button class="nav-item" data-tab="ai" data-label="AI Insights">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l1.2 3.6 3.6 1.2-3.6 1.2L10 12.1 8.8 8.5 5.2 7.3l3.6-1.2L10 2.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15.5 12l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z" fill="currentColor"/></svg>
         <span>AI Insights</span>
@@ -1659,6 +1663,32 @@
     </div>
   </section>
 
+  <!-- IMPORTANT DOCS -->
+  <section class="panel" id="panel-importantdocs">
+    <h2 class="section-title">Important Docs</h2>
+    <p class="section-sub">Licenses, permits, insurance, contracts, and anything else worth having on hand</p>
+
+    <form id="form-importantdoc" class="entry-form">
+      <div class="field"><label>Title</label><input type="text" name="title" placeholder="e.g. Liquor License 2026" required></div>
+      <div class="field"><label>Category</label><select name="category" id="importantdoc-category-select"></select></div>
+      <div class="field wide"><label>File</label><input type="file" id="importantdoc-file-input" required></div>
+      <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
+      <button type="submit" class="btn">Upload Document</button>
+    </form>
+    <p class="helper-note" style="margin-top:-8px; margin-bottom:16px;">PDF, images, or any other file type. Up to ~15MB.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="field"><label>Filter by Category</label><select id="importantdocs-category-filter"><option value="">— All Categories —</option></select></div>
+      <div class="field"><label>Search</label><input type="text" id="importantdocs-search" placeholder="Search by title…"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Category</th><th>File</th><th>Size</th><th>Notes</th><th>Uploaded</th><th></th></tr></thead>
+        <tbody id="table-importantdocs"></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ADMIN: SETUP COST CATEGORIES -->
   <section class="panel" id="panel-admin-categories">
     <h2 class="section-title">Setup Cost Categories</h2>
@@ -2012,7 +2042,7 @@ function stallDateLabel(v){
 
 document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
 
-let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [] };
+let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [], importantDocs: [] };
 let chartInstance = null;
 let partnerChartInstance = null;
 
@@ -2047,6 +2077,7 @@ const ENDPOINTS = {
   cateringPackages: '/api/catering-packages',
   stallPackages: '/api/stall-packages',
   stallPackageSelections: '/api/stall-package-selections',
+  importantDocs: '/api/important-documents',
 };
 
 async function apiGet(key){
@@ -2115,6 +2146,7 @@ async function loadAll(){
   populateStaticDropdown('price_unit', 'priceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
+  populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'stallvendor-paymentstatus-select', 'Status');
@@ -2146,6 +2178,7 @@ function renderAll(){
     renderEventPackages, renderEventPrep, renderEventInvoices, renderEventPackageSelections,
     renderStallVendors,
     renderStallPackages,
+    renderImportantDocs,
     renderMenuItems,
     renderMenuCategoryTree,
     renderMenuCombos,
@@ -3163,6 +3196,113 @@ function renderStallPackages(){
     : (state.stallPackages.length
         ? `<tr class="empty-row"><td colspan="7">No items match this filter.</td></tr>`
         : `<tr class="empty-row"><td colspan="7">No items yet — add a menu item above (e.g. category "Mains", item "Butter Chicken").</td></tr>`);
+}
+
+// ---------- IMPORTANT DOCS ----------
+let importantDocFileData = '';
+let importantDocFileMeta = null; // { name, type, size }
+
+document.getElementById('importantdoc-file-input').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 14_000_000){
+    alert('That file is a bit large — please pick something under ~14MB.');
+    e.target.value = '';
+    importantDocFileData = '';
+    importantDocFileMeta = null;
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    importantDocFileData = reader.result;
+    importantDocFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('form-importantdoc').addEventListener('submit', async e=>{
+  e.preventDefault();
+  if(!importantDocFileData || !importantDocFileMeta){ alert('Choose a file to upload.'); return; }
+  const f = new FormData(e.target);
+  const payload = {
+    title: f.get('title'), category: f.get('category')||'', notes: f.get('notes')||'',
+    fileName: importantDocFileMeta.name, fileType: importantDocFileMeta.type, fileSize: importantDocFileMeta.size,
+    fileData: importantDocFileData,
+  };
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try{
+    const row = await apiCreate('importantDocs', payload);
+    state.importantDocs.unshift(row);
+    renderImportantDocs();
+    e.target.reset();
+    importantDocFileData = '';
+    importantDocFileMeta = null;
+  }catch(err){ alert(err.message); }
+  finally{ btn.disabled = false; btn.textContent = 'Upload Document'; }
+});
+
+document.getElementById('importantdocs-category-filter').addEventListener('change', renderImportantDocs);
+document.getElementById('importantdocs-search').addEventListener('input', renderImportantDocs);
+
+function base64ToBlob(dataUrl, mimeType){
+  const byteString = atob(dataUrl.split(',')[1]);
+  const bytes = new Uint8Array(byteString.length);
+  for(let i=0;i<byteString.length;i++) bytes[i] = byteString.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
+}
+
+function viewImportantDoc(id){
+  const doc = state.importantDocs.find(d=>String(d.id)===String(id));
+  if(!doc || !doc.fileData) return;
+  const blob = base64ToBlob(doc.fileData, doc.fileType || 'application/octet-stream');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 60_000); // give the new tab a minute to actually load it
+}
+
+function fmtFileSize(bytes){
+  if(!bytes) return '—';
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function renderImportantDocs(){
+  const filterSelect = document.getElementById('importantdocs-category-filter');
+  if(filterSelect){
+    const current = filterSelect.value;
+    const categories = state.dropdownOptions.filter(o=>o.listName==='document_category').sort((a,b)=>a.sortOrder-b.sortOrder);
+    filterSelect.innerHTML = `<option value="">— All Categories —</option>` + categories.map(o=>`<option value="${esc(o.value)}">${o.value}</option>`).join('');
+    if(current) filterSelect.value = current;
+  }
+
+  const tbody = document.getElementById('table-importantdocs');
+  if(!tbody) return;
+  const catFilter = filterSelect?.value || '';
+  const search = (document.getElementById('importantdocs-search')?.value || '').toLowerCase().trim();
+  const filtered = state.importantDocs.filter(d =>
+    (!catFilter || d.category === catFilter) &&
+    (!search || d.title.toLowerCase().includes(search))
+  );
+
+  tbody.innerHTML = filtered.length ? filtered.map(d=>{
+    const when = d.createdAt ? new Date(d.createdAt).toLocaleDateString() : '—';
+    return `<tr>
+      <td>${esc(d.title)}</td>
+      <td>${d.category ? `<span class="segment-tag tag-catering">${esc(d.category)}</span>` : '—'}</td>
+      <td>${esc(d.fileName)}</td>
+      <td>${fmtFileSize(d.fileSize)}</td>
+      <td>${esc(d.notes)||'—'}</td>
+      <td>${when}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn ghost" style="padding:5px 10px; font-size:11px;" onclick="viewImportantDoc('${d.id}')">View</button>
+        <button class="del-btn" data-seg="importantDocs" data-id="${d.id}">✕</button>
+      </td>
+    </tr>`;
+  }).join('') : (state.importantDocs.length
+    ? `<tr class="empty-row"><td colspan="7">No documents match this filter.</td></tr>`
+    : `<tr class="empty-row"><td colspan="7">No documents uploaded yet.</td></tr>`);
 }
 
 // ---------- FOOD PREP COSTING ----------
@@ -4409,6 +4549,7 @@ function refreshAllStaticDropdowns(){
   populateStaticDropdown('price_unit', 'priceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
+  populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
   populateStaticDropdown('payment_status', 'paymentstatus-select', 'Status');
   populateStaticDropdown('station_tag', 'menuitem-station-select', 'Station');
@@ -4756,7 +4897,7 @@ const MENU_LABELS = {
   eventprep:'Inventory & Prep Planning', eventinvoicing:'Invoicing & Billing',
   eventsummary:'Event Summaries', contributions:'Partner Contributions',
   setupcosts:'Setup Costs', loans:'Loans & EMI', ai:'AI Insights', admin:'Admin Panel',
-  activity:'Activity Log', stallvendor:'Stall Vendor',
+  activity:'Activity Log', stallvendor:'Stall Vendor', importantdocs:'Important Docs',
 };
 
 function renderAdminPermissions(){
@@ -5193,7 +5334,7 @@ const NAV_RESOURCE_MAP = {
   eventbookings:'eventbookings', eventsummary:'eventsummary', eventcatalog:'eventcatalog',
   eventtagging:'eventcatalog', foodprepcosting:'eventcatalog', eventrevenue:'eventcatalog',
   eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor',
-  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai',
+  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs',
   activity:'activity',
   'admin-categories':'admin', 'admin-dropdowns':'admin', 'admin-eventcatalog':'admin',
   'admin-eventassignments':'admin', 'admin-users':'admin', 'admin-permissions':'admin',
