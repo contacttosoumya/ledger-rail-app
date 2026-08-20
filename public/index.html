@@ -917,6 +917,7 @@
         <div class="nav-submenu" id="submenu-stallvendor"><div class="nav-submenu-inner">
           <button class="nav-subitem active" data-tab="stallvendor">Stall Bookings</button>
           <button class="nav-subitem" data-tab="stallcatalog">Menu Catalog</button>
+          <button class="nav-subitem" data-tab="stalltagging">Stall Food Tagging</button>
         </div></div>
       </div>
       <button class="nav-item" data-tab="costing" data-label="Costing">
@@ -1468,7 +1469,19 @@
       <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
       <button type="submit" class="btn">Add Stall Vendor</button>
     </form>
-    <p class="helper-note" style="margin-top:-8px; margin-bottom:16px;">Leave End Date blank for a single-day festival. Set it to mark a booking as spanning multiple days — food tagging can then be assigned to specific days within that range.</p>
+    <p class="helper-note" style="margin-top:-8px; margin-bottom:16px;">Leave End Date blank for a single-day booking. Set it for a multi-day festival — this creates a <b>separate booking for each day</b> in that range automatically, so each day can be tracked and have its own menu items tagged independently.</p>
+
+    <div style="display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="field"><label>Search</label><input type="text" id="stallvendor-search" placeholder="Festival, vendor, location, stall #…"></div>
+      <div class="field"><label>Festival</label><select id="stallvendor-festival-filter"><option value="">— All Festivals —</option></select></div>
+      <div class="field"><label>Payment Status</label><select id="stallvendor-status-filter"><option value="">— All —</option></select></div>
+      <div class="field"><label>From Date</label><input type="date" id="stallvendor-date-from"></div>
+      <div class="field"><label>To Date</label><input type="date" id="stallvendor-date-to"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <button type="button" class="btn ghost" id="stallvendor-clear-filters" style="padding:6px 14px; font-size:11.5px;">Clear Filters</button>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead><tr><th>Festival / Event</th><th>Date(s)</th><th>Location</th><th>Vendor</th><th>Contact</th><th>Stall #</th><th class="num">Stall Fee</th><th>Payment Status</th><th>Notes</th><th></th></tr></thead>
@@ -1506,6 +1519,73 @@
       <table>
         <thead><tr><th>Item Category</th><th>Item Name</th><th>Description</th><th class="num">Price</th><th>Unit</th><th>Dietary / Allergen Tags</th><th></th></tr></thead>
         <tbody id="table-stallpackages"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STALL FOOD TAGGING -->
+  <section class="panel" id="panel-stalltagging">
+    <h2 class="section-title">Stall Food Tagging</h2>
+    <p class="section-sub">Tag catalog items to a stall booking — in bulk, or one at a time with a custom quantity or discount</p>
+
+    <h3 class="subhead" style="margin-top:0;">Quick-Tag Multiple Items to a Stall Booking</h3>
+    <p class="helper-note" style="margin-top:-6px; margin-bottom:14px;">
+      Search, check off everything for this booking, and assign them all in one click. Every item checked gets the default quantity below with no discount; fine-tune individual quantities or discounts afterward in Admin Panel.
+    </p>
+    <div class="card" style="margin-bottom:24px;">
+      <div class="field" style="margin-bottom:14px; max-width:320px;"><label>Filter by Festival</label><select id="stalltag-quicktag-festival-filter"><option value="">— All Festivals —</option></select></div>
+      <div style="display:grid; grid-template-columns:1.2fr 0.9fr 1.2fr 0.7fr; gap:10px; margin-bottom:14px; align-items:end;">
+        <div class="field"><label>Stall Booking</label><select id="stalltag-quicktag-event-select"></select></div>
+        <div class="field" id="stalltag-quicktag-day-field" style="display:none;"><label>Day</label><select id="stalltag-quicktag-day-select"></select></div>
+        <div class="field"><label>Search Catalog</label><input type="text" id="stalltag-quicktag-search" placeholder="Search by item or category…"></div>
+        <div class="field"><label>Default Qty</label><input type="number" id="stalltag-quicktag-defaultqty" value="1" min="0" step="0.01"></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <button type="button" class="btn ghost" id="stalltag-quicktag-selectall" style="border-color:var(--line); color:var(--ink);">Select All Visible</button>
+        <button type="button" class="btn ghost" id="stalltag-quicktag-clear" style="border-color:var(--line); color:var(--ink);">Clear Selection</button>
+        <span class="helper-note" id="stalltag-quicktag-count" style="margin:0 0 0 auto;"></span>
+      </div>
+      <div id="stalltag-quicktag-list" style="max-height:420px; overflow-y:auto; border:1px solid var(--line); border-radius:8px; padding:6px 10px;"></div>
+      <button type="button" class="btn brass" id="stalltag-quicktag-assign" style="margin-top:14px;">Assign Selected Items</button>
+    </div>
+
+    <h3 class="subhead">Add One Item Manually</h3>
+    <p class="helper-note" style="margin-top:-6px; margin-bottom:14px;">
+      Use this when a single item needs a custom quantity or discount right away, instead of tuning it afterward.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <form id="form-stallpackageselection">
+          <div class="field" style="margin-bottom:10px; max-width:320px;"><label>Filter by Festival</label><select id="stalltag-manual-festival-filter"><option value="">— All Festivals —</option></select></div>
+          <div class="field" style="margin-bottom:10px;"><label>Stall Booking</label><select name="stallVendorId" id="stallpkgsel-event-select" required></select></div>
+          <div class="field" id="stallpkgsel-day-field" style="display:none; margin-bottom:10px;"><label>Day</label><select id="stallpkgsel-day-select"></select></div>
+          <div class="field" style="margin-bottom:10px;"><label>Catalog Item</label><select name="packageId" id="stallpkgsel-package-select" required></select></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div class="field"><label>Quantity</label><input type="number" step="0.01" name="quantity" id="stallpkgsel-qty" value="1" min="0"></div>
+            <div class="field"><label>Discount %</label><input type="number" step="0.01" name="discountPct" id="stallpkgsel-discpct" value="0" min="0" max="100"></div>
+            <div class="field"><label>Discount Amount</label><input type="number" step="0.01" name="discountAmount" id="stallpkgsel-discamt" value="0" min="0"></div>
+          </div>
+          <div class="field" style="margin-bottom:10px;"><label>Notes</label><input type="text" name="notes" placeholder="optional, e.g. reason for discount"></div>
+          <div class="cost-summary" id="stallpkgsel-summary"></div>
+          <button type="submit" class="btn" style="margin-top:14px;">Assign to Stall Booking</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3>Why this prevents price mismatches</h3>
+        <p class="helper-note" style="margin-top:0;">
+          Every stall booking references the catalog item by ID, not by a copied price. If you ever update an item's base price in the Menu Catalog, every booking using it reflects the new price automatically. The only way one booking pays differently than another for the same item is the explicit discount you set right here.
+        </p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
+      <div class="field"><label>Filter by Festival</label><select id="stalltag-assigned-festival-filter"><option value="">— All Festivals —</option></select></div>
+      <div class="field"><label>Search Assigned Items</label><input type="text" id="stalltag-assigned-search" placeholder="Search by item, category, or booking…"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Stall Booking</th><th>Date</th><th>Item</th><th class="num">Base Price</th><th class="num">Qty</th><th class="num">Discount</th><th class="num">Final Price</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="table-stallpackageselections"></tbody>
       </table>
     </div>
   </section>
@@ -2181,6 +2261,7 @@ function renderAll(){
     renderEventPackages, renderEventPrep, renderEventInvoices, renderEventPackageSelections,
     renderStallVendors,
     renderStallPackages,
+    renderStallTagging,
     renderImportantDocs,
     renderMenuItems,
     renderMenuCategoryTree,
@@ -2483,6 +2564,12 @@ document.querySelector('main').addEventListener('click', async e=>{
     }
     if(seg === 'menuItems'){
       state.menuComboStepItems = state.menuComboStepItems.filter(si=>String(si.menuItemId)!==String(id));
+    }
+    if(seg === 'stallVendors'){
+      state.stallPackageSelections = state.stallPackageSelections.filter(sel=>String(sel.stallVendorId)!==String(id));
+    }
+    if(seg === 'stallPackages'){
+      state.stallPackageSelections = state.stallPackageSelections.filter(sel=>String(sel.packageId)!==String(id));
     }
     if(seg === 'menuCombos'){
       const stepIds = state.menuComboSteps.filter(s=>String(s.comboId)===String(id)).map(s=>String(s.id));
@@ -3884,6 +3971,386 @@ document.getElementById('menucombo-list').addEventListener('submit', async e=>{
   }
 });
 
+// ---------- STALL FOOD TAGGING (mirrors Event Food Tagging, plus festival filters) ----------
+function refreshStallFestivalFilterSelects(){
+  const festivals = Array.from(new Set(state.stallVendors.map(v=>v.festivalName).filter(Boolean))).sort();
+  ['stalltag-quicktag-festival-filter','stalltag-manual-festival-filter','stalltag-assigned-festival-filter'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">— All Festivals —</option>` + festivals.map(f=>`<option value="${esc(f)}">${f}</option>`).join('');
+    if(current && festivals.includes(current)) sel.value = current;
+  });
+}
+
+function stallVendorOptionsHtml(filterId){
+  const festival = document.getElementById(filterId)?.value || '';
+  const list = festival ? state.stallVendors.filter(v=>v.festivalName===festival) : state.stallVendors;
+  if(!list.length) return `<option value="">${festival ? 'No bookings for this festival' : 'Add a stall booking first'}</option>`;
+  return list.map(v=>`<option value="${v.id}">${esc(v.festivalName)} — ${stallDateLabel(v)} — ${esc(v.vendorName)}</option>`).join('');
+}
+
+function refreshStallDaySelector(eventSelectId, daySelectId, dayFieldId){
+  const eventSel = document.getElementById(eventSelectId);
+  const daySel = document.getElementById(daySelectId);
+  const dayField = document.getElementById(dayFieldId);
+  if(!eventSel || !daySel || !dayField) return null;
+  const v = state.stallVendors.find(x=>String(x.id)===String(eventSel.value));
+  if(!v){ dayField.style.display = 'none'; daySel.innerHTML = ''; return null; }
+  if(!isStallMultiDay(v)){
+    dayField.style.display = 'none';
+    daySel.innerHTML = `<option value="${v.eventDate}">${v.eventDate}</option>`;
+    return v.eventDate;
+  }
+  dayField.style.display = '';
+  const current = daySel.value;
+  const range = stallDateRange(v);
+  daySel.innerHTML = range.map(d=>`<option value="${d}">${d}</option>`).join('');
+  if(current && range.includes(current)) daySel.value = current;
+  return daySel.value;
+}
+
+document.getElementById('stalltag-quicktag-festival-filter').addEventListener('change', ()=>{
+  document.getElementById('stalltag-quicktag-event-select').innerHTML = stallVendorOptionsHtml('stalltag-quicktag-festival-filter');
+  stallQuickTagSelectedIds.clear();
+  renderStallQuickTagList();
+});
+document.getElementById('stalltag-manual-festival-filter').addEventListener('change', ()=>{
+  document.getElementById('stallpkgsel-event-select').innerHTML = stallVendorOptionsHtml('stalltag-manual-festival-filter');
+  refreshStallPackageSelect();
+});
+document.getElementById('stalltag-assigned-festival-filter').addEventListener('change', renderStallPackageSelections);
+document.getElementById('stalltag-assigned-search').addEventListener('input', renderStallPackageSelections);
+
+function computeStallItemPrice(){
+  const pkgId = document.getElementById('stallpkgsel-package-select').value;
+  const pkg = state.stallPackages.find(p=>String(p.id)===String(pkgId));
+  const qty = +document.getElementById('stallpkgsel-qty').value || 0;
+  const discPct = +document.getElementById('stallpkgsel-discpct').value || 0;
+  const discAmt = +document.getElementById('stallpkgsel-discamt').value || 0;
+  const basePrice = pkg ? pkg.basePrice : 0;
+  const subtotal = basePrice * qty;
+  const pctOff = subtotal * (discPct/100);
+  const finalPrice = Math.max(0, subtotal - pctOff - discAmt);
+  return { pkg, basePrice, qty, discPct, discAmt, subtotal, pctOff, finalPrice };
+}
+function updateStallPackageSelectionSummary(){
+  const summary = document.getElementById('stallpkgsel-summary');
+  if(!summary) return;
+  const c = computeStallItemPrice();
+  if(!c.pkg){ summary.innerHTML = `<div class="row"><span>Add a catalog item to see pricing</span><span></span></div>`; return; }
+  summary.innerHTML = `
+    <div class="row"><span>Catalog Base Price</span><span>${fmt(c.basePrice)} × ${c.qty}</span></div>
+    <div class="row"><span>Subtotal</span><span>${fmt(c.subtotal)}</span></div>
+    ${c.discPct>0 ? `<div class="row"><span>Discount (${c.discPct}%)</span><span>-${fmt(c.pctOff)}</span></div>` : ''}
+    ${c.discAmt>0 ? `<div class="row"><span>Discount (flat)</span><span>-${fmt(c.discAmt)}</span></div>` : ''}
+    <div class="row total"><span>Price for This Booking</span><span>${fmt(c.finalPrice)}</span></div>
+  `;
+}
+['stallpkgsel-package-select','stallpkgsel-qty','stallpkgsel-discpct','stallpkgsel-discamt'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateStallPackageSelectionSummary);
+});
+
+function refreshStallPackageSelect(){
+  const sel = document.getElementById('stallpkgsel-package-select');
+  if(!sel) return;
+  const current = sel.value;
+  const eventSel = document.getElementById('stallpkgsel-event-select');
+  const selectedVendorId = eventSel ? eventSel.value : '';
+  const selectedDay = refreshStallDaySelector('stallpkgsel-event-select', 'stallpkgsel-day-select', 'stallpkgsel-day-field');
+  const alreadyAssignedIds = new Set(
+    state.stallPackageSelections
+      .filter(s => String(s.stallVendorId) === String(selectedVendorId) && s.tagDate === selectedDay)
+      .map(s => String(s.packageId))
+  );
+  const available = state.stallPackages.filter(p => !alreadyAssignedIds.has(String(p.id)));
+  sel.innerHTML = available.length
+    ? available.map(p=>`<option value="${p.id}">${p.name} — ${p.itemName || 'unnamed'} (${fmt(p.basePrice)} / ${p.priceUnit})</option>`).join('')
+    : (state.stallPackages.length ? `<option value="">All catalog items are already assigned to this booking on this day</option>` : `<option value="">Add a catalog item first</option>`);
+  if(current && available.some(p=>String(p.id)===current)) sel.value = current;
+  updateStallPackageSelectionSummary();
+}
+document.getElementById('stallpkgsel-event-select').addEventListener('change', refreshStallPackageSelect);
+document.getElementById('stallpkgsel-day-select').addEventListener('change', refreshStallPackageSelect);
+
+document.getElementById('form-stallpackageselection').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = new FormData(e.target);
+  if(!f.get('stallVendorId')){ alert('Add a stall booking first.'); return; }
+  if(!f.get('packageId')){ alert('Add a catalog item first.'); return; }
+  const daySel = document.getElementById('stallpkgsel-day-select');
+  const selectedVendor = state.stallVendors.find(v=>String(v.id)===String(f.get('stallVendorId')));
+  const tagDate = daySel.value || daySel.options[0]?.value || (selectedVendor ? selectedVendor.eventDate : '');
+  if(!tagDate){ alert('Could not determine a date for this item — try re-selecting the booking.'); return; }
+  const payload = { stallVendorId:+f.get('stallVendorId'), packageId:+f.get('packageId'), tagDate, quantity:+f.get('quantity')||1,
+    discountPct:+f.get('discountPct')||0, discountAmount:+f.get('discountAmount')||0, notes: f.get('notes')||'' };
+  try{
+    const row = await apiCreate('stallPackageSelections', payload);
+    state.stallPackageSelections.unshift(row);
+    renderStallPackageSelections();
+    document.getElementById('stallpkgsel-qty').value = 1;
+    document.getElementById('stallpkgsel-discpct').value = 0;
+    document.getElementById('stallpkgsel-discamt').value = 0;
+    e.target.querySelector('[name=notes]').value = '';
+    updateStallPackageSelectionSummary();
+    refreshStallPackageSelect();
+  }catch(err){ alert(err.message); }
+});
+
+function renderStallPackageSelections(){
+  const tbody = document.getElementById('table-stallpackageselections');
+  if(!tbody) return;
+  const festival = document.getElementById('stalltag-assigned-festival-filter')?.value || '';
+  const search = (document.getElementById('stalltag-assigned-search')?.value || '').toLowerCase().trim();
+
+  const rows = state.stallPackageSelections.filter(sel=>{
+    const v = state.stallVendors.find(x=>String(x.id)===String(sel.stallVendorId));
+    if(festival && (!v || v.festivalName !== festival)) return false;
+    if(search){
+      const pkg = state.stallPackages.find(p=>String(p.id)===String(sel.packageId));
+      const haystack = `${v?v.festivalName:''} ${v?v.vendorName:''} ${pkg?pkg.name:''} ${pkg?pkg.itemName:''}`.toLowerCase();
+      if(!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">${state.stallPackageSelections.length ? 'No tagged items match these filters.' : 'No items assigned to a stall booking yet — use the form above.'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(sel=>{
+    const v = state.stallVendors.find(x=>String(x.id)===String(sel.stallVendorId));
+    const pkg = state.stallPackages.find(p=>String(p.id)===String(sel.packageId));
+    const basePrice = pkg ? pkg.basePrice : 0;
+    const subtotal = basePrice * sel.quantity;
+    const pctOff = subtotal * (sel.discountPct/100);
+    const finalPrice = Math.max(0, subtotal - pctOff - sel.discountAmount);
+    const discountLabel = (sel.discountPct>0 || sel.discountAmount>0)
+      ? [sel.discountPct>0?sel.discountPct+'%':null, sel.discountAmount>0?fmt(sel.discountAmount):null].filter(Boolean).join(' + ')
+      : '—';
+    return `<tr>
+      <td>${v ? esc(v.festivalName)+' — '+esc(v.vendorName) : '—'}</td>
+      <td>${sel.tagDate||'—'}</td>
+      <td>${pkg ? esc(pkg.name)+' — '+esc(pkg.itemName||'unnamed') : '—'}</td>
+      <td class="num">${fmt(basePrice)}</td>
+      <td class="num">${sel.quantity}</td>
+      <td class="num">${discountLabel}</td>
+      <td class="num pos">${fmt(finalPrice)}</td>
+      <td>${esc(sel.notes)}</td>
+      <td><button class="del-btn" data-seg="stallPackageSelections" data-id="${sel.id}">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ---------- STALL QUICK-TAG ----------
+let stallQuickTagSelectedIds = new Set();
+
+function renderStallQuickTagList(){
+  const listEl = document.getElementById('stalltag-quicktag-list');
+  if(!listEl) return;
+  const searchInput = document.getElementById('stalltag-quicktag-search');
+  const search = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+  if(!state.stallPackages.length){
+    listEl.innerHTML = `<p class="helper-note" style="margin:8px;">Add items to the Menu Catalog above first.</p>`;
+    return;
+  }
+
+  const eventSel = document.getElementById('stalltag-quicktag-event-select');
+  const selectedVendorId = eventSel ? eventSel.value : '';
+  const selectedDay = refreshStallDaySelector('stalltag-quicktag-event-select', 'stalltag-quicktag-day-select', 'stalltag-quicktag-day-field');
+  const alreadyAssignedIds = new Set(
+    state.stallPackageSelections
+      .filter(sel => String(sel.stallVendorId) === String(selectedVendorId) && sel.tagDate === selectedDay)
+      .map(sel => String(sel.packageId))
+  );
+  alreadyAssignedIds.forEach(id => stallQuickTagSelectedIds.delete(id));
+
+  const filtered = state.stallPackages.filter(p =>
+    !search || p.name.toLowerCase().includes(search) || (p.itemName||'').toLowerCase().includes(search)
+  );
+  if(!filtered.length){
+    listEl.innerHTML = `<p class="helper-note" style="margin:8px;">No catalog items match "${search}".</p>`;
+    return;
+  }
+
+  const byCategory = {};
+  filtered.forEach(p => { (byCategory[p.name] = byCategory[p.name] || []).push(p); });
+  const categories = Object.keys(byCategory).sort();
+
+  listEl.innerHTML = categories.map(cat => {
+    const items = byCategory[cat];
+    const assignedCount = items.filter(p => alreadyAssignedIds.has(String(p.id))).length;
+    const countLabel = assignedCount > 0
+      ? `${items.length} item${items.length!==1?'s':''} · ${assignedCount} already assigned`
+      : `${items.length} item${items.length!==1?'s':''}`;
+    return `
+    <div style="margin-bottom:8px;">
+      <div style="display:flex; align-items:center; gap:9px; padding:8px 4px 4px; cursor:pointer;">
+        <input type="checkbox" class="stalltag-category-checkbox" data-category="${esc(cat)}" style="width:14px; height:14px; accent-color:var(--gold); flex-shrink:0; cursor:pointer;">
+        <label style="font-family:var(--font-ui); font-weight:700; font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; cursor:pointer;">
+          ${cat} <span style="font-weight:500; text-transform:none; letter-spacing:0; color:var(--ink-faint);">(${countLabel})</span>
+        </label>
+      </div>
+      ${items.map(p => {
+        const isAssigned = alreadyAssignedIds.has(String(p.id));
+        return `
+        <label style="display:flex; align-items:center; gap:10px; padding:7px 4px 7px 26px; border-bottom:1px solid var(--line-soft); cursor:${isAssigned?'default':'pointer'}; ${isAssigned?'opacity:0.55;':''}">
+          <input type="checkbox" class="stalltag-checkbox" data-package-id="${p.id}" data-category="${esc(cat)}"
+            ${isAssigned ? 'checked disabled' : (stallQuickTagSelectedIds.has(String(p.id)) ? 'checked' : '')}
+            style="width:15px; height:15px; accent-color:var(--gold); flex-shrink:0; cursor:${isAssigned?'default':'pointer'};">
+          <span style="flex:1; font-family:var(--font-ui); font-size:13px;">${p.itemName || 'unnamed'}</span>
+          ${isAssigned ? `<span class="segment-tag tag-daily" style="flex-shrink:0;">Already assigned</span>` : ''}
+          <span style="font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint);">${p.priceUnit}</span>
+          <span style="font-family:var(--font-mono); font-size:12.5px; font-weight:600; min-width:70px; text-align:right;">${fmt(p.basePrice)}</span>
+        </label>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+
+  syncStallQuickTagCategoryCheckboxes();
+  updateStallQuickTagCount();
+}
+
+function syncStallQuickTagCategoryCheckboxes(){
+  document.querySelectorAll('.stalltag-category-checkbox').forEach(catCb=>{
+    const cat = catCb.dataset.category;
+    const allItemCbs = Array.from(document.querySelectorAll('.stalltag-checkbox')).filter(cb=>cb.dataset.category===cat);
+    const selectableCbs = allItemCbs.filter(cb=>!cb.disabled);
+    if(!selectableCbs.length){
+      catCb.checked = false;
+      catCb.indeterminate = false;
+      catCb.disabled = true;
+      return;
+    }
+    catCb.disabled = false;
+    const checkedCount = selectableCbs.filter(cb=>cb.checked).length;
+    catCb.checked = checkedCount === selectableCbs.length;
+    catCb.indeterminate = checkedCount>0 && checkedCount<selectableCbs.length;
+  });
+}
+
+function updateStallQuickTagCount(){
+  const el = document.getElementById('stalltag-quicktag-count');
+  if(!el) return;
+  el.textContent = stallQuickTagSelectedIds.size
+    ? `${stallQuickTagSelectedIds.size} item${stallQuickTagSelectedIds.size!==1?'s':''} selected`
+    : '';
+}
+
+document.getElementById('stalltag-quicktag-list').addEventListener('change', e=>{
+  const catCb = e.target.closest('.stalltag-category-checkbox');
+  if(catCb){
+    const cat = catCb.dataset.category;
+    const shouldCheck = catCb.checked;
+    document.querySelectorAll('.stalltag-checkbox').forEach(cb=>{
+      if(cb.dataset.category === cat && !cb.disabled){
+        cb.checked = shouldCheck;
+        if(shouldCheck) stallQuickTagSelectedIds.add(cb.dataset.packageId); else stallQuickTagSelectedIds.delete(cb.dataset.packageId);
+      }
+    });
+    syncStallQuickTagCategoryCheckboxes();
+    updateStallQuickTagCount();
+    return;
+  }
+  const cb = e.target.closest('.stalltag-checkbox');
+  if(!cb) return;
+  const id = cb.dataset.packageId;
+  if(cb.checked) stallQuickTagSelectedIds.add(id); else stallQuickTagSelectedIds.delete(id);
+  syncStallQuickTagCategoryCheckboxes();
+  updateStallQuickTagCount();
+});
+
+document.getElementById('stalltag-quicktag-search').addEventListener('input', renderStallQuickTagList);
+document.getElementById('stalltag-quicktag-event-select').addEventListener('change', ()=>{
+  stallQuickTagSelectedIds.clear();
+  renderStallQuickTagList();
+});
+document.getElementById('stalltag-quicktag-day-select').addEventListener('change', ()=>{
+  stallQuickTagSelectedIds.clear();
+  renderStallQuickTagList();
+  updateStallQuickTagCount();
+});
+
+document.getElementById('stalltag-quicktag-selectall').addEventListener('click', ()=>{
+  document.querySelectorAll('.stalltag-checkbox').forEach(cb=>{
+    if(cb.disabled) return;
+    cb.checked = true;
+    stallQuickTagSelectedIds.add(cb.dataset.packageId);
+  });
+  syncStallQuickTagCategoryCheckboxes();
+  updateStallQuickTagCount();
+});
+
+document.getElementById('stalltag-quicktag-clear').addEventListener('click', ()=>{
+  stallQuickTagSelectedIds.clear();
+  document.querySelectorAll('.stalltag-checkbox').forEach(cb=> cb.checked = false);
+  syncStallQuickTagCategoryCheckboxes();
+  updateStallQuickTagCount();
+});
+
+document.getElementById('stalltag-quicktag-assign').addEventListener('click', async ()=>{
+  const stallVendorId = document.getElementById('stalltag-quicktag-event-select').value;
+  if(!stallVendorId){ alert('Add a stall booking first.'); return; }
+  if(!stallQuickTagSelectedIds.size){ alert('Check at least one item to assign.'); return; }
+  const daySel = document.getElementById('stalltag-quicktag-day-select');
+  const selectedVendor = state.stallVendors.find(v=>String(v.id)===String(stallVendorId));
+  const tagDate = daySel.value || daySel.options[0]?.value || (selectedVendor ? selectedVendor.eventDate : '');
+  if(!tagDate){ alert('Could not determine a date for these items — try re-selecting the booking.'); return; }
+  const qty = +document.getElementById('stalltag-quicktag-defaultqty').value || 1;
+  const btn = document.getElementById('stalltag-quicktag-assign');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Assigning…';
+
+  const ids = Array.from(stallQuickTagSelectedIds);
+  let succeeded = 0, skipped = 0, failed = 0;
+  for(const packageId of ids){
+    try{
+      const row = await apiCreate('stallPackageSelections', {
+        stallVendorId:+stallVendorId, packageId:+packageId, tagDate, quantity:qty, discountPct:0, discountAmount:0, notes:''
+      });
+      state.stallPackageSelections.unshift(row);
+      succeeded++;
+    }catch(err){
+      if(err.status === 409) skipped++; else failed++;
+    }
+  }
+
+  stallQuickTagSelectedIds.clear();
+  document.querySelectorAll('.stalltag-checkbox').forEach(cb=> cb.checked = false);
+  updateStallQuickTagCount();
+  renderStallPackageSelections();
+  renderStallQuickTagList();
+  refreshStallPackageSelect();
+
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+  const parts = [`Tagged ${succeeded} item${succeeded!==1?'s':''}.`];
+  if(skipped) parts.push(`${skipped} already assigned (skipped).`);
+  if(failed) parts.push(`${failed} failed.`);
+  alert(parts.join(' '));
+});
+
+function renderStallTagging(){
+  refreshStallFestivalFilterSelects();
+  const quicktagSel = document.getElementById('stalltag-quicktag-event-select');
+  if(quicktagSel){
+    const current = quicktagSel.value;
+    quicktagSel.innerHTML = stallVendorOptionsHtml('stalltag-quicktag-festival-filter');
+    if(current && state.stallVendors.some(v=>String(v.id)===current)) quicktagSel.value = current;
+  }
+  const manualSel = document.getElementById('stallpkgsel-event-select');
+  if(manualSel){
+    const current = manualSel.value;
+    manualSel.innerHTML = stallVendorOptionsHtml('stalltag-manual-festival-filter');
+    if(current && state.stallVendors.some(v=>String(v.id)===current)) manualSel.value = current;
+  }
+  renderStallQuickTagList();
+  refreshStallPackageSelect();
+  renderStallPackageSelections();
+}
+
 // ---------- EVENT-WISE ITEM PRICING (catalog tagged to a specific event) ----------
 function computeEventItemPrice(){
   const pkgId = document.getElementById('eventpkgsel-package-select').value;
@@ -4458,16 +4925,69 @@ function renderEventInvoices(){
 }
 
 // ---------- STALL VENDOR ----------
+function refreshStallVendorFilterSelects(){
+  const festivalSelect = document.getElementById('stallvendor-festival-filter');
+  if(festivalSelect){
+    const current = festivalSelect.value;
+    const festivals = Array.from(new Set(state.stallVendors.map(v=>v.festivalName).filter(Boolean))).sort();
+    festivalSelect.innerHTML = `<option value="">— All Festivals —</option>` + festivals.map(f=>`<option value="${esc(f)}">${f}</option>`).join('');
+    if(current && festivals.includes(current)) festivalSelect.value = current;
+  }
+  const statusSelect = document.getElementById('stallvendor-status-filter');
+  if(statusSelect){
+    const current = statusSelect.value;
+    const statuses = state.dropdownOptions.filter(o=>o.listName==='payment_status').sort((a,b)=>a.sortOrder-b.sortOrder);
+    statusSelect.innerHTML = `<option value="">— All —</option>` + statuses.map(o=>`<option value="${esc(o.value)}">${o.value}</option>`).join('');
+    if(current) statusSelect.value = current;
+  }
+}
+
+function getFilteredStallVendors(){
+  const search = (document.getElementById('stallvendor-search')?.value || '').toLowerCase().trim();
+  const festival = document.getElementById('stallvendor-festival-filter')?.value || '';
+  const status = document.getElementById('stallvendor-status-filter')?.value || '';
+  const dateFrom = document.getElementById('stallvendor-date-from')?.value || '';
+  const dateTo = document.getElementById('stallvendor-date-to')?.value || '';
+
+  return state.stallVendors.filter(v=>{
+    if(search){
+      const haystack = `${v.festivalName} ${v.vendorName} ${v.location} ${v.stallNumber}`.toLowerCase();
+      if(!haystack.includes(search)) return false;
+    }
+    if(festival && v.festivalName !== festival) return false;
+    if(status && v.paymentStatus !== status) return false;
+    if(dateFrom && (!v.eventDate || v.eventDate < dateFrom)) return false;
+    if(dateTo && (!v.eventDate || v.eventDate > dateTo)) return false;
+    return true;
+  });
+}
+
+['stallvendor-search','stallvendor-festival-filter','stallvendor-status-filter','stallvendor-date-from','stallvendor-date-to'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', renderStallVendors);
+});
+document.getElementById('stallvendor-clear-filters').addEventListener('click', ()=>{
+  document.getElementById('stallvendor-search').value = '';
+  document.getElementById('stallvendor-festival-filter').value = '';
+  document.getElementById('stallvendor-status-filter').value = '';
+  document.getElementById('stallvendor-date-from').value = '';
+  document.getElementById('stallvendor-date-to').value = '';
+  renderStallVendors();
+});
+
 function renderStallVendors(){
+  refreshStallVendorFilterSelects();
+  const filtered = getFilteredStallVendors();
+
   const kpiRow = document.getElementById('stallvendor-kpis');
   if(kpiRow){
-    const totalFees = state.stallVendors.reduce((s,v)=>s+v.stallFee,0);
-    const paidFees = state.stallVendors.filter(v=>v.paymentStatus==='Paid in Full').reduce((s,v)=>s+v.stallFee,0);
+    const totalFees = filtered.reduce((s,v)=>s+v.stallFee,0);
+    const paidFees = filtered.filter(v=>v.paymentStatus==='Paid in Full').reduce((s,v)=>s+v.stallFee,0);
     const outstanding = totalFees - paidFees;
-    const stallCount = state.stallVendors.length;
+    const stallCount = filtered.length;
     kpiRow.innerHTML = `
-      <div class="receipt"><div class="label">Stalls Given Out</div><div class="value">${stallCount}</div><div class="sub">across all festivals</div></div>
-      <div class="receipt"><div class="label">Total Stall Fees</div><div class="value">${fmt(totalFees)}</div><div class="sub">all entries</div></div>
+      <div class="receipt"><div class="label">Stalls Given Out</div><div class="value">${stallCount}</div><div class="sub">${filtered.length !== state.stallVendors.length ? 'matching filters' : 'across all festivals'}</div></div>
+      <div class="receipt"><div class="label">Total Stall Fees</div><div class="value">${fmt(totalFees)}</div><div class="sub">filtered entries</div></div>
       <div class="receipt"><div class="label">Collected</div><div class="value pos">${fmt(paidFees)}</div><div class="sub">marked Paid in Full</div></div>
       <div class="receipt"><div class="label">Outstanding</div><div class="value ${outstanding>0?'neg':'pos'}">${fmt(outstanding)}</div><div class="sub">not yet fully paid</div></div>
     `;
@@ -4475,7 +4995,7 @@ function renderStallVendors(){
 
   const tbody = document.getElementById('table-stallvendors');
   if(!tbody) return;
-  tbody.innerHTML = state.stallVendors.length ? state.stallVendors.map(v=>{
+  tbody.innerHTML = filtered.length ? filtered.map(v=>{
     const tag = PAYMENT_STATUS_TAG[v.paymentStatus] || 'tag-events';
     return `<tr>
       <td>${esc(v.festivalName)}</td>
@@ -4489,23 +5009,54 @@ function renderStallVendors(){
       <td>${esc(v.notes)}</td>
       <td><button class="del-btn" data-seg="stallVendors" data-id="${v.id}">✕</button></td>
     </tr>`;
-  }).join('') : `<tr class="empty-row"><td colspan="10">No stall vendors yet — add one above.</td></tr>`;
+  }).join('') : `<tr class="empty-row"><td colspan="10">${state.stallVendors.length ? 'No bookings match these filters.' : 'No stall vendors yet — add one above.'}</td></tr>`;
 }
 
 document.getElementById('form-stallvendor').addEventListener('submit', async e=>{
   e.preventDefault();
   const f = new FormData(e.target);
-  const payload = {
-    festivalName: f.get('festivalName'), eventDate: f.get('eventDate') || '', endDate: f.get('endDate') || '', location: f.get('location')||'',
+  const startDate = f.get('eventDate') || '';
+  const endDateVal = f.get('endDate') || '';
+
+  if(endDateVal && startDate && endDateVal < startDate){
+    alert('End Date can\'t be before Start Date.');
+    return;
+  }
+
+  const baseFields = {
+    festivalName: f.get('festivalName'), location: f.get('location')||'',
     vendorName: f.get('vendorName'), vendorContact: f.get('vendorContact')||'', stallNumber: f.get('stallNumber')||'',
     stallFee: +f.get('stallFee') || 0, paymentStatus: f.get('paymentStatus'), notes: f.get('notes')||'',
   };
-  try{
-    const row = await apiCreate('stallVendors', payload);
-    state.stallVendors.unshift(row);
-    renderStallVendors();
-    e.target.reset();
-  }catch(err){ alert(err.message); }
+
+  // A date range creates one atomic booking PER DAY rather than a single
+  // multi-day record — each day is then independently trackable (its own
+  // payment status, its own tagged menu items) instead of sharing one row.
+  const days = startDate ? stallDateRange({ eventDate: startDate, endDate: endDateVal }) : [''];
+
+  const btn = e.target.querySelector('button[type=submit]');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = days.length > 1 ? `Creating ${days.length} bookings…` : 'Adding…';
+
+  let succeeded = 0, failed = 0;
+  for(const day of days){
+    try{
+      const row = await apiCreate('stallVendors', { ...baseFields, eventDate: day, endDate: '' });
+      state.stallVendors.unshift(row);
+      succeeded++;
+    }catch(err){ failed++; console.warn('Failed to create stall booking for', day || '(no date)', '-', err.message); }
+  }
+  renderStallVendors();
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+
+  if(failed){
+    alert(`Created ${succeeded} of ${days.length} bookings. ${failed} failed.`);
+  } else if(days.length > 1){
+    alert(`Created ${succeeded} separate bookings, one for each day from ${days[0]} to ${days[days.length-1]}.`);
+  }
+  if(succeeded) e.target.reset();
 });
 
 // ---------- ADMIN PANEL ----------
@@ -5336,7 +5887,7 @@ const NAV_RESOURCE_MAP = {
   menucategories:'menucatalog', menucombos:'menucatalog',
   eventbookings:'eventbookings', eventsummary:'eventsummary', eventcatalog:'eventcatalog',
   eventtagging:'eventcatalog', foodprepcosting:'eventcatalog', eventrevenue:'eventcatalog',
-  eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor',
+  eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor', stalltagging:'stallvendor',
   contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs',
   activity:'activity',
   'admin-categories':'admin', 'admin-dropdowns':'admin', 'admin-eventcatalog':'admin',
