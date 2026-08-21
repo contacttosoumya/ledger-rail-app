@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RollCall Ops — Restaurant Accounts</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <script>
   // Applied here (before <body> paints) rather than in the main script at the
   // bottom of the page, so switching themes doesn't cause a visible flash —
@@ -131,9 +132,6 @@
   }
   html[data-theme="modern"] .xp-titlebar{ display:none; }
   html[data-theme="modern"] .xp-dialog-body{ padding:32px 28px 28px; }
-  html[data-theme="modern"] .login-brand .brand-mark{
-    background:linear-gradient(135deg,var(--gold),#9C6F2E); color:var(--navy);
-  }
 
   /* ---------- THEME SWITCHER ---------- */
   .theme-switcher{
@@ -198,15 +196,16 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);
   }
   .xp-dialog-body{ padding:24px 24px 22px; }
+  .login-hero{
+    display:block; width:100%; max-width:260px; margin:0 auto 18px;
+  }
   .login-brand{
     display:flex; align-items:center; gap:12px;
     margin-bottom:26px;
   }
   .login-brand .brand-mark{
-    width:40px; height:40px; border-radius:9px;
-    background:linear-gradient(135deg,var(--gold),#1D6B1D);
-    color:#fff; font-family:var(--font-ui); font-weight:800; font-size:15px;
-    display:flex; align-items:center; justify-content:center;
+    width:48px; height:48px; border-radius:50%;
+    object-fit:cover; box-shadow:var(--shadow-sm); flex-shrink:0;
   }
   .login-brand .brand-text{
     font-family:var(--font-ui); font-weight:700; font-size:17px; color:var(--ink);
@@ -246,16 +245,12 @@
     border-bottom:1px solid var(--navy-line);
   }
   .brand-mark{
-    width:36px; height:36px;
-    border-radius:8px;
-    background:linear-gradient(135deg,var(--gold),#9C6F2E);
-    color:var(--navy);
-    font-family:var(--font-ui);
-    font-weight:800;
-    font-size:14px;
-    display:flex; align-items:center; justify-content:center;
-    letter-spacing:0.01em;
+    width:40px; height:40px;
+    border-radius:50%;
+    object-fit:cover;
     box-shadow:var(--shadow-sm);
+    flex-shrink:0;
+    background:transparent;
   }
   .brand-text{
     font-family:var(--font-ui);
@@ -804,8 +799,9 @@
       <div class="xp-titlebar-btns"><button type="button" tabindex="-1" aria-hidden="true">✕</button></div>
     </div>
     <div class="xp-dialog-body">
+    <img class="login-hero" src="/logo-mascot.png" alt="Roll Call Kitchen — Authentic Kathi Rolls">
     <div class="login-brand">
-      <div class="brand-mark">RO</div>
+      <img class="brand-mark" src="/logo-badge.png" alt="RollCall Ops">
       <div class="brand-text">RollCall Ops<span>Restaurant Accounts</span></div>
     </div>
     <form id="login-form">
@@ -833,7 +829,7 @@
     </div>
     <div class="xp-dialog-body">
     <div class="login-brand">
-      <div class="brand-mark">RO</div>
+      <img class="brand-mark" src="/logo-badge.png" alt="RollCall Ops">
       <div class="brand-text">RollCall Ops<span>Restaurant Accounts</span></div>
     </div>
     <h3 style="font-family:var(--font-ui); font-size:15px; margin:0 0 6px;">Set Your Own Password</h3>
@@ -858,7 +854,7 @@
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-mark">RO</div>
+      <img class="brand-mark" src="/logo-badge.png" alt="RollCall Ops">
       <div class="brand-text">RollCall Ops<span>Restaurant Accounts</span></div>
     </div>
 
