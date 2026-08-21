@@ -298,7 +298,7 @@ app.use('/api/contributions', crudRouter('contributions', [
 app.use('/api/loans', crudRouter('loans', [
   F.string('lender', 'lender'), F.string('loanType', 'loan_type'), F.number('principal', 'principal'),
   F.number('rate', 'rate'), F.number('tenure', 'tenure'), F.string('startDate', 'start_date'),
-  F.number('emi', 'emi'), F.string('notes', 'notes'),
+  F.number('emi', 'emi'), F.string('notes', 'notes'), F.string('partnerName', 'partner_name'),
 ], 'id DESC', 'loans'));
 
 app.use('/api/emi-payments', crudRouter('emi_payments', [

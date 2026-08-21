@@ -236,6 +236,9 @@ CREATE TABLE IF NOT EXISTS loans (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Which partner (if any) took out this specific loan — blank means a general
+-- business loan not attributed to one person. A partner can have several loans.
+ALTER TABLE loans ADD COLUMN IF NOT EXISTS partner_name TEXT DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS emi_payments (
   id BIGSERIAL PRIMARY KEY,
