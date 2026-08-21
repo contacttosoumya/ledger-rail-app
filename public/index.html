@@ -1806,14 +1806,24 @@
     <h2 class="section-title">Important Docs</h2>
     <p class="section-sub">Licenses, permits, insurance, contracts, and anything else worth having on hand</p>
 
+    <h3 id="importantdoc-form-heading" style="margin-top:0;">Upload a Document</h3>
     <form id="form-importantdoc" class="entry-form">
       <div class="field"><label>Title</label><input type="text" name="title" placeholder="e.g. Liquor License 2026" required></div>
       <div class="field"><label>Category</label><select name="category" id="importantdoc-category-select"></select></div>
-      <div class="field wide"><label>File</label><input type="file" id="importantdoc-file-input" required></div>
+      <div class="field wide"><label>File</label><input type="file" id="importantdoc-file-input"></div>
       <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
-      <button type="submit" class="btn">Upload Document</button>
+      <button type="submit" class="btn" id="importantdoc-submit-btn">Upload Document</button>
+      <button type="button" class="btn ghost" id="importantdoc-cancel-btn" style="display:none;">Cancel</button>
     </form>
-    <p class="helper-note" style="margin-top:-8px; margin-bottom:16px;">PDF, images, or any other file type. Up to ~15MB.</p>
+    <div id="importantdoc-current-file-wrap" style="display:none; margin-top:12px;">
+      <span class="helper-note" style="margin:0;">Currently attached: <span id="importantdoc-current-file-name"></span> — choose a new file above to replace it.</span>
+      <button type="button" id="importantdoc-remove-current-file" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove Document</button>
+    </div>
+    <div id="importantdoc-file-preview-wrap" style="display:none; margin-top:12px;">
+      <span class="helper-note" style="margin:0;">Attached: <span id="importantdoc-file-preview-name"></span></span>
+      <button type="button" id="importantdoc-file-clear" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove</button>
+    </div>
+    <p class="helper-note" style="margin-top:12px; margin-bottom:16px;">PDF, images, or any other file type. Up to ~15MB.</p>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
       <div class="field"><label>Filter by Category</label><select id="importantdocs-category-filter"><option value="">— All Categories —</option></select></div>
@@ -3801,6 +3811,8 @@ function renderStallPackages(){
 // ---------- IMPORTANT DOCS ----------
 let importantDocFileData = '';
 let importantDocFileMeta = null; // { name, type, size }
+let editingImportantDocId = null;
+let importantDocRemoveExistingFile = false;
 
 document.getElementById('importantdoc-file-input').addEventListener('change', e=>{
   const file = e.target.files[0];
@@ -3810,36 +3822,114 @@ document.getElementById('importantdoc-file-input').addEventListener('change', e=
     e.target.value = '';
     importantDocFileData = '';
     importantDocFileMeta = null;
+    document.getElementById('importantdoc-file-preview-wrap').style.display = 'none';
     return;
   }
   const reader = new FileReader();
   reader.onload = ()=>{
     importantDocFileData = reader.result;
     importantDocFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+    document.getElementById('importantdoc-file-preview-name').textContent = file.name;
+    document.getElementById('importantdoc-file-preview-wrap').style.display = 'block';
+    // A newly-picked file supersedes an earlier "remove" click.
+    importantDocRemoveExistingFile = false;
+    document.getElementById('importantdoc-current-file-wrap').style.display = 'none';
   };
   reader.readAsDataURL(file);
 });
+document.getElementById('importantdoc-file-clear').addEventListener('click', ()=>{
+  importantDocFileData = '';
+  importantDocFileMeta = null;
+  document.getElementById('importantdoc-file-input').value = '';
+  document.getElementById('importantdoc-file-preview-wrap').style.display = 'none';
+});
+document.getElementById('importantdoc-remove-current-file').addEventListener('click', ()=>{
+  importantDocRemoveExistingFile = true;
+  document.getElementById('importantdoc-current-file-wrap').style.display = 'none';
+});
+
+function resetImportantDocForm(){
+  editingImportantDocId = null;
+  importantDocRemoveExistingFile = false;
+  importantDocFileData = '';
+  importantDocFileMeta = null;
+  document.getElementById('form-importantdoc').reset();
+  document.getElementById('importantdoc-file-preview-wrap').style.display = 'none';
+  document.getElementById('importantdoc-current-file-wrap').style.display = 'none';
+  document.getElementById('importantdoc-form-heading').textContent = 'Upload a Document';
+  document.getElementById('importantdoc-submit-btn').textContent = 'Upload Document';
+  document.getElementById('importantdoc-cancel-btn').style.display = 'none';
+}
+
+function startEditImportantDoc(id){
+  const d = state.importantDocs.find(x=>String(x.id)===String(id));
+  if(!d) return;
+  editingImportantDocId = id;
+  importantDocRemoveExistingFile = false;
+  importantDocFileData = '';
+  importantDocFileMeta = null;
+
+  const form = document.getElementById('form-importantdoc');
+  form.querySelector('[name=title]').value = d.title;
+  form.querySelector('[name=category]').value = d.category || '';
+  form.querySelector('[name=notes]').value = d.notes || '';
+  document.getElementById('importantdoc-file-input').value = '';
+  document.getElementById('importantdoc-file-preview-wrap').style.display = 'none';
+
+  const currentFileWrap = document.getElementById('importantdoc-current-file-wrap');
+  if(d.fileData){
+    document.getElementById('importantdoc-current-file-name').textContent = d.fileName || 'attached file';
+    currentFileWrap.style.display = 'block';
+  } else {
+    currentFileWrap.style.display = 'none';
+  }
+
+  document.getElementById('importantdoc-form-heading').textContent = `Editing: ${d.title}`;
+  document.getElementById('importantdoc-submit-btn').textContent = 'Update Document';
+  document.getElementById('importantdoc-cancel-btn').style.display = 'inline-block';
+  document.getElementById('panel-importantdocs').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+document.getElementById('importantdoc-cancel-btn').addEventListener('click', resetImportantDocForm);
 
 document.getElementById('form-importantdoc').addEventListener('submit', async e=>{
   e.preventDefault();
-  if(!importantDocFileData || !importantDocFileMeta){ alert('Choose a file to upload.'); return; }
   const f = new FormData(e.target);
-  const payload = {
-    title: f.get('title'), category: f.get('category')||'', notes: f.get('notes')||'',
-    fileName: importantDocFileMeta.name, fileType: importantDocFileMeta.type, fileSize: importantDocFileMeta.size,
-    fileData: importantDocFileData,
-  };
-  const btn = e.target.querySelector('button[type=submit]');
-  btn.disabled = true; btn.textContent = 'Uploading…';
+
+  // File data: a newly-picked file always wins; otherwise, if editing and the
+  // user explicitly clicked "Remove Document", clear it; otherwise, if
+  // editing, keep whatever was already attached; otherwise (creating fresh),
+  // a file is required — this is the whole point of this page.
+  let fileFields;
+  if(importantDocFileMeta){
+    fileFields = { fileName: importantDocFileMeta.name, fileType: importantDocFileMeta.type, fileSize: importantDocFileMeta.size, fileData: importantDocFileData };
+  } else if(editingImportantDocId && importantDocRemoveExistingFile){
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  } else if(editingImportantDocId){
+    const original = state.importantDocs.find(x=>String(x.id)===String(editingImportantDocId));
+    fileFields = { fileName: original?.fileName||'', fileType: original?.fileType||'', fileSize: original?.fileSize||0, fileData: original?.fileData||'' };
+  } else {
+    if(!importantDocFileData || !importantDocFileMeta){ alert('Choose a file to upload.'); return; }
+    fileFields = { fileName: importantDocFileMeta.name, fileType: importantDocFileMeta.type, fileSize: importantDocFileMeta.size, fileData: importantDocFileData };
+  }
+
+  const payload = { title: f.get('title'), category: f.get('category')||'', notes: f.get('notes')||'', ...fileFields };
+  const btn = document.getElementById('importantdoc-submit-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = editingImportantDocId ? 'Updating…' : 'Uploading…';
   try{
-    const row = await apiCreate('importantDocs', payload);
-    state.importantDocs.unshift(row);
+    if(editingImportantDocId){
+      const updated = await apiUpdate('importantDocs', editingImportantDocId, payload);
+      const idx = state.importantDocs.findIndex(x=>String(x.id)===String(editingImportantDocId));
+      if(idx>-1) state.importantDocs[idx] = updated;
+    } else {
+      const row = await apiCreate('importantDocs', payload);
+      state.importantDocs.unshift(row);
+    }
+    resetImportantDocForm();
     renderImportantDocs();
-    e.target.reset();
-    importantDocFileData = '';
-    importantDocFileMeta = null;
   }catch(err){ alert(err.message); }
-  finally{ btn.disabled = false; btn.textContent = 'Upload Document'; }
+  finally{ btn.disabled = false; btn.textContent = originalLabel; }
 });
 
 document.getElementById('importantdocs-category-filter').addEventListener('change', renderImportantDocs);
@@ -3897,6 +3987,7 @@ function renderImportantDocs(){
       <td>${when}</td>
       <td style="white-space:nowrap;">
         <button type="button" class="btn ghost" style="padding:5px 10px; font-size:11px;" onclick="viewImportantDoc('${d.id}')">View</button>
+        <button type="button" class="btn ghost" style="padding:5px 10px; font-size:11px;" onclick="startEditImportantDoc('${d.id}')">Edit</button>
         <button class="del-btn" data-seg="importantDocs" data-id="${d.id}">✕</button>
       </td>
     </tr>`;
