@@ -421,7 +421,7 @@ DECLARE
   superadmin_id BIGINT; owner_id BIGINT; manager_id BIGINT; partner_id BIGINT; staff_id BIGINT;
   resources TEXT[] := ARRAY['overview','daily','catering','costing',
     'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor',
-    'contributions','setupcosts','loans','ai','admin','menucatalog','importantdocs','monthlyexpenses'];
+    'contributions','setupcosts','loans','ai','admin','menucatalog','importantdocs','monthlyexpenses','importantcontacts'];
   r TEXT;
 BEGIN
   SELECT id INTO superadmin_id FROM roles WHERE name = 'Super Admin';
@@ -448,7 +448,7 @@ BEGIN
 
   -- Manager: full CRUD on day-to-day operations; view-only on capital/financing; no admin
   FOREACH r IN ARRAY ARRAY['overview','daily','catering','costing',
-    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog','importantdocs','monthlyexpenses'] LOOP
+    'eventbookings','eventcatalog','eventprep','eventinvoicing','eventsummary','stallvendor','menucatalog','importantdocs','monthlyexpenses','importantcontacts'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (manager_id, r, true, true, true)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -463,7 +463,7 @@ BEGIN
   ON CONFLICT (role_id, resource) DO NOTHING;
 
   -- Partner: view-only across financial reporting and capital, plus overview
-  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai','importantdocs','monthlyexpenses'] LOOP
+  FOREACH r IN ARRAY ARRAY['overview','contributions','setupcosts','loans','ai','importantdocs','monthlyexpenses','importantcontacts'] LOOP
     INSERT INTO role_permissions (role_id, resource, can_view, can_edit, can_delete)
     VALUES (partner_id, r, true, false, false)
     ON CONFLICT (role_id, resource) DO NOTHING;
@@ -822,4 +822,40 @@ INSERT INTO dropdown_options (list_name, value, sort_order) VALUES
   ('expense_category', 'Pest Control', 100),
   ('expense_category', 'Security', 110),
   ('expense_category', 'Other', 120)
+ON CONFLICT (list_name, value) DO UPDATE SET sort_order = EXCLUDED.sort_order;
+
+-- ===========================================================================
+-- IMPORTANT CONTACTS — vendors, contractors, utilities, banks, emergency
+-- contacts, and anything else worth having on hand. Same shape as
+-- Important Docs (categorized, searchable, optional attached file), adapted
+-- for contact info instead of a required document.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS important_contacts (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT DEFAULT '',
+  company TEXT DEFAULT '',
+  phone TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  address TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  file_name TEXT DEFAULT '',
+  file_type TEXT DEFAULT '',
+  file_size INTEGER NOT NULL DEFAULT 0,
+  file_data TEXT DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_important_contacts_category ON important_contacts(category);
+
+INSERT INTO dropdown_options (list_name, value, sort_order) VALUES
+  ('contact_category', 'Vendor', 10),
+  ('contact_category', 'Contractor', 20),
+  ('contact_category', 'Utility', 30),
+  ('contact_category', 'Bank', 40),
+  ('contact_category', 'Insurance Agent', 50),
+  ('contact_category', 'Legal', 60),
+  ('contact_category', 'Government', 70),
+  ('contact_category', 'Delivery / Courier', 80),
+  ('contact_category', 'Emergency', 90),
+  ('contact_category', 'Other', 100)
 ON CONFLICT (list_name, value) DO UPDATE SET sort_order = EXCLUDED.sort_order;

@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 const ALL_RESOURCES = [
   'overview', 'daily', 'catering', 'costing',
   'eventbookings', 'eventcatalog', 'eventprep', 'eventinvoicing', 'eventsummary', 'stallvendor',
-  'contributions', 'setupcosts', 'loans', 'ai', 'admin', 'activity', 'menucatalog', 'importantdocs', 'monthlyexpenses',
+  'contributions', 'setupcosts', 'loans', 'ai', 'admin', 'activity', 'menucatalog', 'importantdocs', 'monthlyexpenses', 'importantcontacts',
 ];
 
 if (!process.env.DATABASE_URL) {
@@ -372,6 +372,12 @@ app.use('/api/monthly-expenses', crudRouter('monthly_expenses', [
   F.string('expenseMonth', 'expense_month'), F.string('paymentStatus', 'payment_status'), F.string('notes', 'notes'),
   F.string('fileName', 'file_name'), F.string('fileType', 'file_type'), F.number('fileSize', 'file_size'), F.string('fileData', 'file_data'),
 ], 'expense_month DESC, id DESC', 'monthlyexpenses'));
+
+app.use('/api/important-contacts', crudRouter('important_contacts', [
+  F.string('name', 'name'), F.string('category', 'category'), F.string('company', 'company'),
+  F.string('phone', 'phone'), F.string('email', 'email'), F.string('address', 'address'), F.string('notes', 'notes'),
+  F.string('fileName', 'file_name'), F.string('fileType', 'file_type'), F.number('fileSize', 'file_size'), F.string('fileData', 'file_data'),
+], 'id DESC', 'importantcontacts'));
 
 app.use('/api/menu-categories', crudRouter('menu_categories', [
   F.string('name', 'name'), F.numberOrNull('parentId', 'parent_id'), F.number('sortOrder', 'sort_order'),

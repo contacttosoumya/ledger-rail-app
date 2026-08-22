@@ -946,6 +946,10 @@
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M5.5 2.5h6l3 3v12h-9v-15Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.5 2.5v3h3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10h6M7 12.7h6M7 15.4h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
         <span>Important Docs</span>
       </button>
+      <button class="nav-item" data-tab="importantcontacts" data-label="Important Contacts">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M6 2.5h10a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2v-11a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 15.2a2 2 0 0 1 2-1.7h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="10.2" cy="7.3" r="1.7" stroke="currentColor" stroke-width="1.4"/><path d="M13.5 6h1.8M13.5 9h1.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span>Important Contacts</span>
+      </button>
       <button class="nav-item" data-tab="ai" data-label="AI Insights">
         <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l1.2 3.6 3.6 1.2-3.6 1.2L10 12.1 8.8 8.5 5.2 7.3l3.6-1.2L10 2.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15.5 12l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z" fill="currentColor"/></svg>
         <span>AI Insights</span>
@@ -1837,6 +1841,46 @@
     </div>
   </section>
 
+  <!-- IMPORTANT CONTACTS -->
+  <section class="panel" id="panel-importantcontacts">
+    <h2 class="section-title">Important Contacts</h2>
+    <p class="section-sub">Vendors, contractors, utilities, banks, and anyone else you'd need to reach in a hurry</p>
+
+    <h3 id="importantcontact-form-heading" style="margin-top:0;">Add a Contact</h3>
+    <form id="form-importantcontact" class="entry-form">
+      <div class="field"><label>Name</label><input type="text" name="name" placeholder="e.g. Priya Sharma" required></div>
+      <div class="field"><label>Category</label><select name="category" id="importantcontact-category-select"></select></div>
+      <div class="field"><label>Company</label><input type="text" name="company" placeholder="e.g. Sharma Plumbing Co."></div>
+      <div class="field"><label>Phone</label><input type="text" name="phone" placeholder="optional"></div>
+      <div class="field"><label>Email</label><input type="email" name="email" placeholder="optional"></div>
+      <div class="field wide"><label>Address</label><input type="text" name="address" placeholder="optional"></div>
+      <div class="field wide"><label>Business Card / Photo (optional)</label><input type="file" id="importantcontact-file-input"></div>
+      <div class="field wide"><label>Notes</label><input type="text" name="notes" placeholder="optional"></div>
+      <button type="submit" class="btn" id="importantcontact-submit-btn">Add Contact</button>
+      <button type="button" class="btn ghost" id="importantcontact-cancel-btn" style="display:none;">Cancel</button>
+    </form>
+    <div id="importantcontact-current-file-wrap" style="display:none; margin-top:12px;">
+      <span class="helper-note" style="margin:0;">Currently attached: <span id="importantcontact-current-file-name"></span> — choose a new file above to replace it.</span>
+      <button type="button" id="importantcontact-remove-current-file" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove File</button>
+    </div>
+    <div id="importantcontact-file-preview-wrap" style="display:none; margin-top:12px;">
+      <span class="helper-note" style="margin:0;">Attached: <span id="importantcontact-file-preview-name"></span></span>
+      <button type="button" id="importantcontact-file-clear" class="btn ghost" style="padding:3px 10px; font-size:11px; margin-left:10px;">Remove</button>
+    </div>
+    <p class="helper-note" style="margin-top:12px; margin-bottom:16px;">A file isn't required — add one only if you want a business card or reference doc on hand.</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div class="field"><label>Filter by Category</label><select id="importantcontacts-category-filter"><option value="">— All Categories —</option></select></div>
+      <div class="field"><label>Search</label><input type="text" id="importantcontacts-search" placeholder="Search by name, company, phone, or email…"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Category</th><th>Company</th><th>Phone</th><th>Email</th><th>File</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="table-importantcontacts"></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ADMIN: SETUP COST CATEGORIES -->
   <section class="panel" id="panel-admin-categories">
     <h2 class="section-title">Setup Cost Categories</h2>
@@ -2193,7 +2237,7 @@ function stallDateLabel(v){
 
 document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
 
-let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [], importantDocs: [], monthlyExpenses: [] };
+let state = { daily: [], catering: [], events: [], costing: [], partners: [], contributions: [], loans: [], emiPayments: [], setupCosts: [], setupCostCategories: [], dropdownOptions: [], eventPackages: [], eventPrepItems: [], eventInvoices: [], eventPackageSelections: [], users: [], roles: [], rolePermissions: [], activityLog: [], stallVendors: [], menuItems: [], menuCategories: [], menuCombos: [], menuComboSteps: [], menuComboStepItems: [], backupLog: [], cateringPackages: [], stallPackages: [], stallPackageSelections: [], importantDocs: [], monthlyExpenses: [], importantContacts: [] };
 let chartInstance = null;
 let partnerChartInstance = null;
 
@@ -2230,6 +2274,7 @@ const ENDPOINTS = {
   stallPackages: '/api/stall-packages',
   stallPackageSelections: '/api/stall-package-selections',
   importantDocs: '/api/important-documents',
+  importantContacts: '/api/important-contacts',
 };
 
 async function apiGet(key){
@@ -2299,6 +2344,7 @@ async function loadAll(){
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
+  populateStaticDropdown('contact_category', 'importantcontact-category-select', 'Category');
   populateStaticDropdown('expense_category', 'monthlyexpense-category-select', 'Category');
   populateStaticDropdown('payment_status', 'monthlyexpense-paymentstatus-select', 'Status');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
@@ -2335,6 +2381,7 @@ function renderAll(){
     renderStallPackages,
     renderStallTagging,
     renderImportantDocs,
+    renderImportantContacts,
     renderMenuItems,
     renderMenuCategoryTree,
     renderMenuCombos,
@@ -3994,6 +4041,179 @@ function renderImportantDocs(){
   }).join('') : (state.importantDocs.length
     ? `<tr class="empty-row"><td colspan="7">No documents match this filter.</td></tr>`
     : `<tr class="empty-row"><td colspan="7">No documents uploaded yet.</td></tr>`);
+}
+
+// ---------- IMPORTANT CONTACTS ----------
+let importantContactFileData = '';
+let importantContactFileMeta = null;
+let editingImportantContactId = null;
+let importantContactRemoveExistingFile = false;
+
+document.getElementById('importantcontact-file-input').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 14_000_000){
+    alert('That file is a bit large — please pick something under ~14MB.');
+    e.target.value = '';
+    importantContactFileData = '';
+    importantContactFileMeta = null;
+    document.getElementById('importantcontact-file-preview-wrap').style.display = 'none';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    importantContactFileData = reader.result;
+    importantContactFileMeta = { name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+    document.getElementById('importantcontact-file-preview-name').textContent = file.name;
+    document.getElementById('importantcontact-file-preview-wrap').style.display = 'block';
+    importantContactRemoveExistingFile = false;
+    document.getElementById('importantcontact-current-file-wrap').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('importantcontact-file-clear').addEventListener('click', ()=>{
+  importantContactFileData = '';
+  importantContactFileMeta = null;
+  document.getElementById('importantcontact-file-input').value = '';
+  document.getElementById('importantcontact-file-preview-wrap').style.display = 'none';
+});
+document.getElementById('importantcontact-remove-current-file').addEventListener('click', ()=>{
+  importantContactRemoveExistingFile = true;
+  document.getElementById('importantcontact-current-file-wrap').style.display = 'none';
+});
+
+function viewImportantContactFile(id){
+  const c = state.importantContacts.find(x=>String(x.id)===String(id));
+  if(!c || !c.fileData) return;
+  const blob = base64ToBlob(c.fileData, c.fileType || 'application/octet-stream');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(()=>URL.revokeObjectURL(url), 60_000);
+}
+
+function resetImportantContactForm(){
+  editingImportantContactId = null;
+  importantContactRemoveExistingFile = false;
+  importantContactFileData = '';
+  importantContactFileMeta = null;
+  document.getElementById('form-importantcontact').reset();
+  document.getElementById('importantcontact-file-preview-wrap').style.display = 'none';
+  document.getElementById('importantcontact-current-file-wrap').style.display = 'none';
+  document.getElementById('importantcontact-form-heading').textContent = 'Add a Contact';
+  document.getElementById('importantcontact-submit-btn').textContent = 'Add Contact';
+  document.getElementById('importantcontact-cancel-btn').style.display = 'none';
+}
+
+function startEditImportantContact(id){
+  const c = state.importantContacts.find(x=>String(x.id)===String(id));
+  if(!c) return;
+  editingImportantContactId = id;
+  importantContactRemoveExistingFile = false;
+  importantContactFileData = '';
+  importantContactFileMeta = null;
+
+  const form = document.getElementById('form-importantcontact');
+  form.querySelector('[name=name]').value = c.name;
+  form.querySelector('[name=category]').value = c.category || '';
+  form.querySelector('[name=company]').value = c.company || '';
+  form.querySelector('[name=phone]').value = c.phone || '';
+  form.querySelector('[name=email]').value = c.email || '';
+  form.querySelector('[name=address]').value = c.address || '';
+  form.querySelector('[name=notes]').value = c.notes || '';
+  document.getElementById('importantcontact-file-input').value = '';
+  document.getElementById('importantcontact-file-preview-wrap').style.display = 'none';
+
+  const currentFileWrap = document.getElementById('importantcontact-current-file-wrap');
+  if(c.fileData){
+    document.getElementById('importantcontact-current-file-name').textContent = c.fileName || 'attached file';
+    currentFileWrap.style.display = 'block';
+  } else {
+    currentFileWrap.style.display = 'none';
+  }
+
+  document.getElementById('importantcontact-form-heading').textContent = `Editing: ${c.name}`;
+  document.getElementById('importantcontact-submit-btn').textContent = 'Update Contact';
+  document.getElementById('importantcontact-cancel-btn').style.display = 'inline-block';
+  document.getElementById('panel-importantcontacts').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+document.getElementById('importantcontact-cancel-btn').addEventListener('click', resetImportantContactForm);
+
+document.getElementById('form-importantcontact').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const f = new FormData(e.target);
+
+  let fileFields;
+  if(importantContactFileMeta){
+    fileFields = { fileName: importantContactFileMeta.name, fileType: importantContactFileMeta.type, fileSize: importantContactFileMeta.size, fileData: importantContactFileData };
+  } else if(editingImportantContactId && importantContactRemoveExistingFile){
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  } else if(editingImportantContactId){
+    const original = state.importantContacts.find(x=>String(x.id)===String(editingImportantContactId));
+    fileFields = { fileName: original?.fileName||'', fileType: original?.fileType||'', fileSize: original?.fileSize||0, fileData: original?.fileData||'' };
+  } else {
+    fileFields = { fileName: '', fileType: '', fileSize: 0, fileData: '' };
+  }
+
+  const payload = { name: f.get('name'), category: f.get('category')||'', company: f.get('company')||'',
+    phone: f.get('phone')||'', email: f.get('email')||'', address: f.get('address')||'', notes: f.get('notes')||'', ...fileFields };
+  const btn = document.getElementById('importantcontact-submit-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = editingImportantContactId ? 'Updating…' : 'Adding…';
+  try{
+    if(editingImportantContactId){
+      const updated = await apiUpdate('importantContacts', editingImportantContactId, payload);
+      const idx = state.importantContacts.findIndex(x=>String(x.id)===String(editingImportantContactId));
+      if(idx>-1) state.importantContacts[idx] = updated;
+    } else {
+      const row = await apiCreate('importantContacts', payload);
+      state.importantContacts.unshift(row);
+    }
+    resetImportantContactForm();
+    renderImportantContacts();
+  }catch(err){ alert(err.message); }
+  finally{ btn.disabled = false; btn.textContent = originalLabel; }
+});
+
+document.getElementById('importantcontacts-category-filter').addEventListener('change', renderImportantContacts);
+document.getElementById('importantcontacts-search').addEventListener('input', renderImportantContacts);
+
+function renderImportantContacts(){
+  const filterSelect = document.getElementById('importantcontacts-category-filter');
+  if(filterSelect){
+    const current = filterSelect.value;
+    const categories = state.dropdownOptions.filter(o=>o.listName==='contact_category').sort((a,b)=>a.sortOrder-b.sortOrder);
+    filterSelect.innerHTML = `<option value="">— All Categories —</option>` + categories.map(o=>`<option value="${esc(o.value)}">${o.value}</option>`).join('');
+    if(current) filterSelect.value = current;
+  }
+
+  const tbody = document.getElementById('table-importantcontacts');
+  if(!tbody) return;
+  const catFilter = filterSelect?.value || '';
+  const search = (document.getElementById('importantcontacts-search')?.value || '').toLowerCase().trim();
+  const filtered = state.importantContacts.filter(c => {
+    if(catFilter && c.category !== catFilter) return false;
+    if(!search) return true;
+    const haystack = `${c.name} ${c.company} ${c.phone} ${c.email}`.toLowerCase();
+    return haystack.includes(search);
+  });
+
+  tbody.innerHTML = filtered.length ? filtered.map(c=>`
+    <tr>
+      <td>${esc(c.name)}</td>
+      <td>${c.category ? `<span class="segment-tag tag-catering">${esc(c.category)}</span>` : '—'}</td>
+      <td>${esc(c.company)||'—'}</td>
+      <td>${esc(c.phone)||'—'}</td>
+      <td>${esc(c.email)||'—'}</td>
+      <td>${c.fileData ? `<button type="button" class="btn ghost" style="padding:3px 10px; font-size:11px;" onclick="viewImportantContactFile('${c.id}')">View</button>` : '—'}</td>
+      <td>${esc(c.notes)||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn ghost" style="padding:5px 10px; font-size:11px;" onclick="startEditImportantContact('${c.id}')">Edit</button>
+        <button class="del-btn" data-seg="importantContacts" data-id="${c.id}">✕</button>
+      </td>
+    </tr>`).join('') : (state.importantContacts.length
+    ? `<tr class="empty-row"><td colspan="8">No contacts match this filter.</td></tr>`
+    : `<tr class="empty-row"><td colspan="8">No contacts added yet.</td></tr>`);
 }
 
 // ---------- FOOD PREP COSTING ----------
@@ -5726,6 +5946,7 @@ function refreshAllStaticDropdowns(){
   populateStaticDropdown('price_unit', 'cateringpriceunit-select', 'Unit');
   populateStaticDropdown('price_unit', 'stallpriceunit-select', 'Unit');
   populateStaticDropdown('document_category', 'importantdoc-category-select', 'Category');
+  populateStaticDropdown('contact_category', 'importantcontact-category-select', 'Category');
   populateStaticDropdown('expense_category', 'monthlyexpense-category-select', 'Category');
   populateStaticDropdown('payment_status', 'monthlyexpense-paymentstatus-select', 'Status');
   populateStaticDropdown('prep_item_status', 'prepstatus-select', 'Status');
@@ -6075,7 +6296,7 @@ const MENU_LABELS = {
   eventprep:'Inventory & Prep Planning', eventinvoicing:'Invoicing & Billing',
   eventsummary:'Event Summaries', contributions:'Partner Contributions',
   setupcosts:'Setup Costs', loans:'Loans & EMI', ai:'AI Insights', admin:'Admin Panel',
-  activity:'Activity Log', stallvendor:'Stall Vendor', importantdocs:'Important Docs', monthlyexpenses:'Monthly Expenses',
+  activity:'Activity Log', stallvendor:'Stall Vendor', importantdocs:'Important Docs', monthlyexpenses:'Monthly Expenses', importantcontacts:'Important Contacts',
 };
 
 function renderAdminPermissions(){
@@ -6512,7 +6733,7 @@ const NAV_RESOURCE_MAP = {
   eventbookings:'eventbookings', eventsummary:'eventsummary', eventcatalog:'eventcatalog',
   eventtagging:'eventcatalog', foodprepcosting:'eventcatalog', eventrevenue:'eventcatalog',
   eventprep:'eventprep', eventinvoicing:'eventinvoicing', stallvendor:'stallvendor', stallcatalog:'stallvendor', stalltagging:'stallvendor',
-  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs', monthlyexpenses:'monthlyexpenses',
+  contributions:'contributions', loans:'loans', setupcosts:'setupcosts', ai:'ai', importantdocs:'importantdocs', monthlyexpenses:'monthlyexpenses', importantcontacts:'importantcontacts',
   activity:'activity',
   'admin-categories':'admin', 'admin-dropdowns':'admin', 'admin-eventcatalog':'admin',
   'admin-eventassignments':'admin', 'admin-users':'admin', 'admin-permissions':'admin',
